@@ -183,8 +183,9 @@ void MyGLCanvas::draw()
 	// Clear the buffer of colors in each bit plane.
 	// bit plane - A set of bits that are on or off (Think of a black and white image)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	drawScene();
+    
+	drawAxis();
 }
 
 void MyGLCanvas::drawScene()
