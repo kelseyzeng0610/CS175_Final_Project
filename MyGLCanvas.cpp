@@ -383,6 +383,7 @@ void MyGLCanvas::drawAxis()
 }
 
 void MyGLCanvas::resetScene() {
+	//TODO: reset scene to default 
     // glm::vec3 eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
 
     // wireframe = 0;
@@ -406,4 +407,9 @@ void MyGLCanvas::resetScene() {
     //     parser = NULL;
     //     scene = NULL;
     // }
+}
+
+void MyGLCanvas::setShape(OBJ_TYPE type) {
+    objType = type;
+    printf("set shape to: %d\n", type);
 }

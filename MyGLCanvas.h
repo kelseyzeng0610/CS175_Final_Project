@@ -12,6 +12,7 @@
 
 #include "SceneObject.h"
 #include "Camera.h"
+#include "Shape.h"
 
 #define SPLINE_SIZE 100
 #define COASTER_SPEED 0.0001
@@ -40,10 +41,13 @@ public:
 	float pixelWidth;
 	float pixelHeight;
 	float scale;
+	OBJ_TYPE objType;
+
 
 	MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
 	void resetScene();
+	void setShape(OBJ_TYPE type);
 
 private:
 	glm::vec3 generateRay(int pixelX, int pixelY);
