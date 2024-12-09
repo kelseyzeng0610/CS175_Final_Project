@@ -29,6 +29,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	camera.setFarPlane(clipFar);
 	// Set the mode so we are modifying our objects.
 	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+	isectOnly = 1;
 }
 
 MyGLCanvas::~MyGLCanvas()

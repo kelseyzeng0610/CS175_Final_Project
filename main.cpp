@@ -1,12 +1,3 @@
-/*  =================== File Information =================
-	File Name: main.cpp
-	Description:
-	Author: Michael Shah
-
-	Purpose: Driver for 3D program to load .ply models 
-	Usage:	
-	===================================================== */
-
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -52,6 +43,10 @@ public:
     Fl_Slider* gSlider;
     Fl_Slider* bSlider;
 	Fl_Slider* sizeSlider;
+
+	Fl_Button* isectButton;
+	Fl_Button* renderButton;
+	Fl_Slider* maxRecursionDepthSlider;
 
 public:
 	// APP WINDOW CONSTRUCTOR
@@ -138,6 +133,17 @@ private:
         printf("value: %d\n", value);
 		// TODO: add size property
     }
+
+	static void renderCB(Fl_Widget*w, void*data) {
+		cout << "render scene" << endl;
+		// TODO: add ray tracing
+		// win->canvas->renderScene();
+	}
+	
+	static void maxRecursionDepthSliderCB(Fl_Widget* w, void* userdata) {
+		int value = win->maxRecursionDepthSlider->value();
+		win->canvas->maxRecursionDepth = value;
+	}
 };
 
 //TODO: DRAW SHAPES
@@ -221,6 +227,21 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     normalButton->value(canvas->normal);
     normalButton->callback(toggleCB, (void *)(&(canvas->normal)));
 
+		renderButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Render!");
+		renderButton->callback(renderCB, (void*)this);
+		
+		isectButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "isectOnly");
+		isectButton->value(canvas->isectOnly);
+		isectButton->callback(toggleCB, (void*)(&(canvas->isectOnly)));
+
+		maxRecursionDepthSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+		maxRecursionDepthSlider->align(FL_ALIGN_TOP);
+		maxRecursionDepthSlider->type(FL_HOR_SLIDER);
+		maxRecursionDepthSlider->step(1);
+		maxRecursionDepthSlider->bounds(0, 5);
+		maxRecursionDepthSlider->value(canvas->maxRecursionDepth);
+		maxRecursionDepthSlider->callback(maxRecursionDepthSliderCB);
+
     buttonsPack->end();
 
 
@@ -282,7 +303,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     sizeSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	sizeSlider->align(FL_ALIGN_TOP);
 	sizeSlider->type(FL_HOR_SLIDER);
-	sizeSlider->bounds(1, 3);
+	sizeSlider->bounds(1, 5);
 	sizeSlider->step(1);
 	sizeSlider->callback(sizeCB);
 

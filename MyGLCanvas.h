@@ -43,7 +43,9 @@ public:
 	float scale;
 	OBJ_TYPE objType;
 
-
+	int isectOnly;
+	int maxRecursionDepth;
+	
 	MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
 	void resetScene();
