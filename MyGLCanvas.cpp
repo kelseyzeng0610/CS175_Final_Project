@@ -381,3 +381,29 @@ void MyGLCanvas::drawAxis()
 	glEnd();
 	glEnable(GL_LIGHTING);
 }
+
+void MyGLCanvas::resetScene() {
+    // glm::vec3 eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
+
+    // wireframe = 0;
+    // fill = 1;
+    // normal = 0;
+    // smooth = 0;
+    // segmentsX = segmentsY = 10;
+
+    // shape->setSegments(segmentsX, segmentsY);
+
+    // if (camera != NULL) {
+    //     delete camera;
+    //     camera = NULL;
+    // }
+    // camera = new Camera();
+    // camera->orientLookAt(eyePosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+    // if (parser != NULL) {
+    //     delete parser;
+    //     delete scene;
+    //     parser = NULL;
+    //     scene = NULL;
+    // }
+}

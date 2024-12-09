@@ -38,6 +38,10 @@ class MyAppWindow : public Fl_Window {
 public:
 	Fl_Button* wireButton;
 	Fl_Button* drawButton;
+	Fl_Button *smoothButton;
+	Fl_Button *fillButton;
+    Fl_Button *normalButton;
+	Fl_Button* resetSceneButton;
     Fl_Slider *rotXSlider;
     Fl_Slider *rotYSlider;
     Fl_Slider *rotZSlider;
@@ -51,6 +55,32 @@ public:
 	static void idleCB(void* userdata) {
 		win->canvas->redraw();
 	}
+
+	void updateGUIValues() {
+        // wireButton->value(canvas->wireframe);
+        // fillButton->value(canvas->fill);
+        // smoothButton->value(canvas->smooth);
+        // normalButton->value(canvas->normal);
+
+        // segmentsXSlider->value(canvas->segmentsX);
+        // segmentsYSlider->value(canvas->segmentsY);
+
+        // rotUSlider->value(canvas->camera->rotU);
+        // rotVSlider->value(canvas->camera->rotV);
+        // rotWSlider->value(canvas->camera->rotW);
+
+        // eyeXSlider->value(canvas->camera->getEyePoint().x);
+        // eyeYSlider->value(canvas->camera->getEyePoint().y);
+        // eyeZSlider->value(canvas->camera->getEyePoint().z);
+
+        // lookXSlider->value(canvas->camera->getLookVector().x);
+        // lookYSlider->value(canvas->camera->getLookVector().y);
+        // lookZSlider->value(canvas->camera->getLookVector().z);
+
+        // nearSlider->value(canvas->camera->getNearPlane());
+        // farSlider->value(canvas->camera->getFarPlane());
+        // angleSlider->value(canvas->camera->getViewAngle());
+    }
 
 private:
 	// Someone changed one of the sliders
@@ -70,6 +100,13 @@ private:
         float value = ((Fl_Slider *)w)->value();
         printf("value: %f\n", value);
         *((float *)userdata) = value;
+    }
+
+	static void resetSceneCB(Fl_Widget* w, void* data) {
+        cout << "Reest Scene" << endl;
+        win->canvas->resetScene();
+        win->updateGUIValues();
+        win->canvas->redraw();
     }
 };
 
@@ -116,10 +153,43 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	pack->spacing(30);
 	pack->begin();
 
+    Fl_Pack* loadPack = new Fl_Pack(w() - 100, 30, 100, h(), "Reset");
+    loadPack->box(FL_DOWN_FRAME);
+    loadPack->labelfont(1);
+    loadPack->type(Fl_Pack::VERTICAL);
+    loadPack->spacing(0);
+    loadPack->begin();
+
+    resetSceneButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Reset Scene");
+    resetSceneButton->callback(resetSceneCB, (void*)this);
+
+    loadPack->end();
+
+    Fl_Pack *buttonsPack = new Fl_Pack(w() - 100, 30, 100, h(), "Render");
+    buttonsPack->box(FL_DOWN_FRAME);
+    buttonsPack->labelfont(1);
+    buttonsPack->type(Fl_Pack::VERTICAL);
+    buttonsPack->spacing(0);
+    buttonsPack->begin();
 
 	wireButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Wireframe");
 	wireButton->callback(toggleCB, (void*)(&(canvas->wireframe)));
 	wireButton->value(canvas->wireframe);
+
+    smoothButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Smooth");
+    smoothButton->value(canvas->smooth);
+    smoothButton->callback(toggleCB, (void *)(&(canvas->smooth)));
+
+    fillButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Fill");
+    fillButton->value(canvas->fill);
+    fillButton->callback(toggleCB, (void *)(&(canvas->fill)));
+
+    normalButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Show Normal");
+    normalButton->value(canvas->normal);
+    normalButton->callback(toggleCB, (void *)(&(canvas->normal)));
+
+    buttonsPack->end();
+
 
 
 

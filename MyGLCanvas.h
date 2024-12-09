@@ -33,12 +33,17 @@ public:
 	float camera_near;
 	float camera_far;
 
+	int   smooth;
+    int   fill;
+    int   normal;
+
 	float pixelWidth;
 	float pixelHeight;
 	float scale;
 
 	MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
+	void resetScene();
 
 private:
 	glm::vec3 generateRay(int pixelX, int pixelY);
