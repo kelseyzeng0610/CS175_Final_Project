@@ -25,6 +25,7 @@
 #include <FL/glu.h>
 
 #include <FL/Fl_Round_Button.H>
+#include <FL/Fl_Value_Slider.H>
 
 #include "MyGLCanvas.h"
 
@@ -37,7 +38,10 @@ class MyAppWindow : public Fl_Window {
 public:
 	Fl_Button* wireButton;
 	Fl_Button* drawButton;
-
+    Fl_Slider *rotXSlider;
+    Fl_Slider *rotYSlider;
+    Fl_Slider *rotZSlider;
+    Fl_Slider *scaleSlider;
 	MyGLCanvas* canvas;
 
 public:
@@ -61,6 +65,12 @@ private:
 		printf("value: %d\n", value);
 		*((float*)userdata) = value;
 	}
+
+	static void sliderFloatCB(Fl_Widget *w, void *userdata) {
+        float value = ((Fl_Slider *)w)->value();
+        printf("value: %f\n", value);
+        *((float *)userdata) = value;
+    }
 };
 
 //TODO: SET DRAW SHAPES
@@ -86,8 +96,13 @@ static void radioButtonCB(Fl_Widget* w, void* userdata) {
 		// }
 	}
 
-    static void drawShape(){
-    }
+static void drawShape() {
+}
+
+static void createXML() {
+
+}
+
 
 MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	begin();
@@ -138,6 +153,54 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Draw Shape");
 	drawButton->callback((Fl_Callback*)drawShape);
 
+	drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Create XML");
+	drawButton->callback((Fl_Callback*)createXML);
+    radioPack->end();
+
+    Fl_Pack *cameraPack = new Fl_Pack(w() - 100, 30, 100, h(), "Camera");
+    cameraPack->box(FL_DOWN_FRAME);
+    cameraPack->labelfont(1);
+    cameraPack->type(Fl_Pack::VERTICAL);
+    cameraPack->spacing(0);
+    cameraPack->begin();
+
+    // slider for controlling rotation
+    Fl_Box *rotXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateX");
+    rotXSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    rotXSlider->align(FL_ALIGN_TOP);
+    rotXSlider->type(FL_HOR_SLIDER);
+    rotXSlider->bounds(-359, 359);
+    rotXSlider->step(1);
+    rotXSlider->value(canvas->rotVec.x);
+    rotXSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.x)));
+
+    Fl_Box *rotYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateY");
+    rotYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    rotYSlider->align(FL_ALIGN_TOP);
+    rotYSlider->type(FL_HOR_SLIDER);
+    rotYSlider->bounds(-359, 359);
+    rotYSlider->step(1);
+    rotYSlider->value(canvas->rotVec.y);
+    rotYSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.y)));
+
+    Fl_Box *rotZTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateZ");
+    rotZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    rotZSlider->align(FL_ALIGN_TOP);
+    rotZSlider->type(FL_HOR_SLIDER);
+    rotZSlider->bounds(-359, 359);
+    rotZSlider->step(1);
+    rotZSlider->value(canvas->rotVec.z);
+    rotZSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.z)));
+
+    Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale");
+    scaleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    scaleSlider->align(FL_ALIGN_TOP);
+    scaleSlider->type(FL_HOR_SLIDER);
+    scaleSlider->bounds(0.1, 2);
+    scaleSlider->value(canvas->scale);
+    scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
+
+    cameraPack->end();
 
 	end();
 }
