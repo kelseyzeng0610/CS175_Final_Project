@@ -42,6 +42,10 @@ public:
 
 	MyGLCanvas* canvas;
 
+	Fl_Button* isectButton;
+	Fl_Button* renderButton;
+	Fl_Slider* maxRecursionDepthSlider;
+
 public:
 	// APP WINDOW CONSTRUCTOR
 	MyAppWindow(int W, int H, const char*L = 0);
