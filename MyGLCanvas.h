@@ -21,6 +21,7 @@
 #include "ShaderManager.h"
 #include "ply.h"
 #include "gfxDefs.h"
+#include "Camera.h"
 
 class ShaderManager;
 class ply;
@@ -42,9 +43,11 @@ public:
 	float clipNear;
 	float clipFar;
 	float scaleFactor;
+	float pixelWidth;
+	float pixelHeight;
+
 	std::vector<ply*> scenePLYObjects;
 	void addPLY(const std::string& plyFile);
-
 	MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
 	
@@ -52,6 +55,11 @@ public:
 	void reloadShaders();
 
 private:
+	glm::vec3 generateRay(int pixelX, int pixelY);
+	glm::vec3 getEyePoint(int pixelX, int pixelY, int screenWidth, int screenHeight);
+	glm::vec3 getIsectPointWorldCoord(glm::vec3 eye, glm::vec3 ray, float t);
+	double intersect(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+
 	void draw();
 	void drawScene();
 
@@ -67,6 +75,16 @@ private:
 	
 
 	bool firstTime;
+	Camera camera;
+	glm::vec3 spherePosition;
+	bool castRay;
+	int mouseX = 0;
+	int mouseY = 0;
+	glm::vec3 oldCenter;
+	glm::vec3 oldIsectPoint;
+	float oldT;
+	bool drag;
+
 };
 
 #endif // !MYGLCANVAS_H

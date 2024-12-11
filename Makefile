@@ -6,7 +6,7 @@ CXXFLAGS  = $(shell fltk-config --cxxflags) -I$(BREWPATH)/include
 LDFLAGS   = $(shell fltk-config --ldflags --use-gl --use-images) -L$(BREWPATH)/lib
 POSTBUILD = fltk-config --post # build .app folder for osx. (does nothing on pc)
 
-$(LAB): % : main.o MyGLCanvas.o ply.o ppm.o SceneObject.o ShaderManager.o
+$(LAB): % : main.o MyGLCanvas.o ply.o ppm.o SceneObject.o ShaderManager.o Camera.o
 	$(CXX) $(LDFLAGS) $^ -o $@
 	$(POSTBUILD) $@
 
