@@ -47,6 +47,7 @@ public:
 	Fl_Button* isectButton;
 	Fl_Button* renderButton;
 	Fl_Slider* maxRecursionDepthSlider;
+	Fl_Button* addShapeButton;
 
 public:
 	// APP WINDOW CONSTRUCTOR
@@ -169,6 +170,63 @@ static void radioButtonCB(Fl_Widget* w, void* userdata) {
         // }
 	}
 
+static void addShapeCB(Fl_Widget* w, void* userdata){
+	MyAppWindow* window = (MyAppWindow*)userdata;
+	Fl_Window* shapeWindow = new Fl_Window(300, 200, "Select Shape");
+	shapeWindow->user_data((void*)window);
+
+	Fl_Box* shapeLabel = new Fl_Box(50, 50, 80, 25, "Shape:");
+    shapeLabel->align(FL_ALIGN_RIGHT | FL_ALIGN_INSIDE);
+    Fl_Choice* shapeChoice = new Fl_Choice(140, 50, 120, 25, "");
+    shapeChoice->add("Cube");
+    shapeChoice->add("Sphere");
+    shapeChoice->add("Cylinder");
+    shapeChoice->add("Cone");
+    shapeChoice->value(0); // Default selection
+	Fl_Button* okButton = new Fl_Button(60, 150, 80, 30, "OK");
+    Fl_Button* cancelButton = new Fl_Button(160, 150, 80, 30, "Cancel");
+
+	okButton->callback([](Fl_Widget* btn, void* data) {
+		Fl_Window* win = (Fl_Window*)data;
+		MyAppWindow* appWin = (MyAppWindow*)win->user_data();
+		Fl_Choice* choice = (Fl_Choice*)win->child(1);
+		int selected = choice->value();
+		std::string plyFile;
+        switch (selected) {
+            case 0: //cube
+				printf("select 0\n");
+                // plyFile = "./data/cube.ply";
+				appWin -> canvas -> drawCube();
+                break;
+            case 1: //sphere
+				appWin -> canvas -> drawSphere();
+                // plyFile = "./data/sphere.ply";
+                break;
+            case 2: //cylinder
+                // plyFile = "./data/cylinder.ply";
+				appWin -> canvas -> drawCylinder();
+                break;
+            case 3: //cone
+                // plyFile = "./data/cone.ply";
+				appWin -> canvas -> drawCone();
+                break;
+            default: //cube
+                // plyFile = "./data/cube.ply";
+				appWin -> canvas -> drawCube();
+        }
+		//  appWin->canvas->addPLY(plyFile);
+		//  appWin->canvas->redraw();
+		 win->hide(); 
+		  }, shapeWindow);
+	cancelButton->callback([](Fl_Widget* btn, void* data) {
+        Fl_Window* win = (Fl_Window*)data;
+        win->hide(); // Close the shape selection window
+    }, shapeWindow);
+	shapeWindow->end();
+    shapeWindow->set_modal(); // Make it a modal dialog
+    shapeWindow->show();
+}
+
 static void addShape() {
 	//TODO: load the shape
 }
@@ -248,33 +306,35 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 
 	// options for drawing primitive
 	Fl_Pack* radioPack = new Fl_Pack(w() - 100, 30, 100, h(), "Shape");
-	radioPack->box(FL_DOWN_FRAME);
-	radioPack->labelfont(1);
-	radioPack->type(Fl_Pack::VERTICAL);
-	radioPack->spacing(0);
-	radioPack->begin();
-	{ Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cube");
-	tmpButton->type(102);
-	tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	tmpButton->value(1);
-	tmpButton->callback((Fl_Callback*)radioButtonCB);
-	}
-	{ Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cylinder");
-	tmpButton->type(102);
-	tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	tmpButton->callback((Fl_Callback*)radioButtonCB);
-	}
-	{ Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cone");
-	tmpButton->type(102);
-	tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	tmpButton->callback((Fl_Callback*)radioButtonCB);
-	}
-	{ Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Sphere");
-	tmpButton->type(102);
-	tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	tmpButton->callback((Fl_Callback*)radioButtonCB);
-	}
-	// primitive properties
+	// radioPack->box(FL_DOWN_FRAME);
+	// radioPack->labelfont(1);
+	// radioPack->type(Fl_Pack::VERTICAL);
+	// radioPack->spacing(0);
+	// radioPack->begin();
+	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cube");
+	// tmpButton->type(102);
+	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
+	// tmpButton->value(1);
+	// tmpButton->callback((Fl_Callback*)radioButtonCB);
+	// }
+	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cylinder");
+	// tmpButton->type(102);
+	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
+	// tmpButton->callback((Fl_Callback*)radioButtonCB);
+	// }
+	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cone");
+	// tmpButton->type(102);
+	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
+	// tmpButton->callback((Fl_Callback*)radioButtonCB);
+	// }
+	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Sphere");
+	// tmpButton->type(102);
+	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
+	// tmpButton->callback((Fl_Callback*)radioButtonCB);
+	// }
+	addShapeButton = new Fl_Button(0, 0, pack->w() - 20, 25, "Select Shape");
+    addShapeButton->callback(addShapeCB, (void*)this);	// primitive properties
+
     Fl_Box* redBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Red");
 	rSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	rSlider->align(FL_ALIGN_TOP);

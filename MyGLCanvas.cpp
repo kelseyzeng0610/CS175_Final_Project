@@ -1,6 +1,17 @@
 #include "MyGLCanvas.h"
 #include <glm/gtc/type_ptr.hpp>
 
+int Shape::m_segmentsX;
+int Shape::m_segmentsY;
+
+// Data structures required for rendering shapes
+int Shape::lastIndex;
+std::vector<std::array<float, 3>> Shape::m_points;
+std::unordered_map<int, glm::vec3> Shape::m_normals;
+
+// Struct for storing each object in the scenegraph described by an xml file
+std::vector<SceneObject> sceneObjects;
+
 MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l)
 {
 	mode(FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
@@ -24,16 +35,25 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	spherePosition = glm::vec3(0, 0, 0);
 
 	myObject = new SceneObject(175);
+	// sphere = new Sphere();
+
 	camera.setViewAngle(viewAngle);
 	camera.setNearPlane(clipNear);
 	camera.setFarPlane(clipFar);
 	// Set the mode so we are modifying our objects.
 	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 	isectOnly = 1;
+	segmentsX = segmentsY = 10;
+	sphere = new Sphere();
+	cube = new Cube();
+	cylinder = new Cylinder();
+	cone = new Cone();
 }
 
 MyGLCanvas::~MyGLCanvas()
 {
+	delete sphere;
+	
 }
 
 /* The generateRay function accepts the mouse click coordinates
@@ -138,7 +158,7 @@ void MyGLCanvas::draw()
 
 	if (!valid())
 	{ // this is called when the GL canvas is set up for the first time or when it is resized...
-		printf("establishing GL context");
+		printf("establishing GL context\n");
 
 		// Set the base texture of our object. Note that loading gl texture can
 		//  only happen after the gl context has been established
@@ -189,6 +209,51 @@ void MyGLCanvas::draw()
 	drawAxis();
 }
 
+void MyGLCanvas::drawShape(OBJ_TYPE type) {
+	// printf("drawing here\n");
+
+    // switch (type) {
+    //     case SHAPE_CUBE:
+    //         shape = sphere;
+    //         break;
+    //     case SHAPE_CYLINDER:
+            
+    //         break;
+    //     case SHAPE_CONE:
+
+    //         break;
+    //     case SHAPE_SPHERE:
+	// 		shape = sphere;
+	// 		printf("sphere\n");
+            
+    //         break;
+    //     default:
+            
+    // }
+    // shape->setSegments(segmentsX, segmentsY);
+    // shape->draw();
+}
+
+void MyGLCanvas::drawSphere() {
+	sphere->setSegments(segmentsX, segmentsY);
+    sphere->draw();
+}
+
+void MyGLCanvas::drawCube() {
+	cube->setSegments(segmentsX, segmentsY);
+    cube->draw();
+}
+
+void MyGLCanvas::drawCylinder() {
+	cylinder->setSegments(segmentsX, segmentsY);
+    cylinder->draw();	
+}
+
+void MyGLCanvas::drawCone() {
+	cone->setSegments(segmentsX, segmentsY);
+    cone->draw();
+}
+
 void MyGLCanvas::drawScene()
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -198,8 +263,12 @@ void MyGLCanvas::drawScene()
 
 	if (castRay == true)
 	{
+		// std::cout << mouseX << std::endl;
 		glm::vec3 eyePointP = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
-		glm::vec3 rayV = generateRay(mouseX, mouseY);
+		// std::cout << eyePointP.x << std::endl;
+		// std::cout << eyePointP.y << std::endl;
+		// std::cout << eyePointP.z << std::endl;
+		glm::vec3 rayV = generateRay(mouseX, mouseY);	
 		glm::vec3 sphereTransV(spherePosition[0], spherePosition[1], spherePosition[2]);
 
 		float t = intersect(eyePointP, rayV, glm::translate(glm::mat4(1.0), sphereTransV));
@@ -241,7 +310,12 @@ void MyGLCanvas::drawScene()
 	}
 	glPushMatrix();
 	glRotatef(90, 0, 1, 0);
-	myObject->drawTexturedSphere();
+	// drawShape(SHAPE_SPHERE);
+	drawCone();
+	// drawCylinder();
+	// drawCube();
+	// myObject->drawTexturedSphere(); //TODO:draw shape here
+	
 	glPopMatrix();
 
 	glPopMatrix();
@@ -283,7 +357,7 @@ int MyGLCanvas::handle(int e)
         
         // move sphere by same offset to maintain relative position to intersection point
         glm::vec3 offset = oldIsectPoint - oldCenter;
-        spherePosition = new_intersection - offset;
+        spherePosition = new_intersection - offset; //TODO: change to object 
     }
     return (1);
 	case FL_MOVE:

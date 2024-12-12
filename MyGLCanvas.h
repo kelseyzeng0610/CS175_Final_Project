@@ -13,6 +13,11 @@
 #include "SceneObject.h"
 #include "Camera.h"
 #include "Shape.h"
+#include "Sphere.h"
+#include "Cone.h"
+#include "Cube.h"
+#include "Cylinder.h"
+
 
 #define SPLINE_SIZE 100
 #define COASTER_SPEED 0.0001
@@ -45,11 +50,24 @@ public:
 
 	int isectOnly;
 	int maxRecursionDepth;
-	
-	MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
+	Sphere* sphere;
+	Cube* cube;
+	Cone* cone;
+	Cylinder* cylinder;
+	Shape* shape;
+	int segmentsX, segmentsY;
+
+
+MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
 	void resetScene();
 	void setShape(OBJ_TYPE type);
+	void drawShape(OBJ_TYPE type);
+	void drawScene();
+	void drawSphere();
+	void drawCube();
+	void drawCylinder();
+	void drawCone();
 
 private:
 	glm::vec3 generateRay(int pixelX, int pixelY);
@@ -58,7 +76,6 @@ private:
 	double intersect(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 
 	void draw();
-	void drawScene();
 
 	void drawAxis();
 	void drawGrid();
