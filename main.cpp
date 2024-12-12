@@ -196,23 +196,28 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
             case 0: //cube
 				printf("select 0\n");
                 // plyFile = "./data/cube.ply";
-				appWin -> canvas -> drawCube();
+				// appWin -> canvas -> drawCube();
+				appWin -> canvas -> setShape(SHAPE_CUBE);
                 break;
             case 1: //sphere
 				appWin -> canvas -> drawSphere();
+				appWin -> canvas -> setShape(SHAPE_SPHERE);
                 // plyFile = "./data/sphere.ply";
                 break;
             case 2: //cylinder
                 // plyFile = "./data/cylinder.ply";
 				appWin -> canvas -> drawCylinder();
+				appWin -> canvas -> setShape(SHAPE_CYLINDER);
                 break;
             case 3: //cone
                 // plyFile = "./data/cone.ply";
 				appWin -> canvas -> drawCone();
+				appWin -> canvas -> setShape(SHAPE_CONE);
                 break;
             default: //cube
                 // plyFile = "./data/cube.ply";
 				appWin -> canvas -> drawCube();
+				appWin -> canvas -> setShape(SHAPE_CUBE);
         }
 		//  appWin->canvas->addPLY(plyFile);
 		//  appWin->canvas->redraw();

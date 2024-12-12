@@ -212,24 +212,25 @@ void MyGLCanvas::draw()
 void MyGLCanvas::drawShape(OBJ_TYPE type) {
 	// printf("drawing here\n");
 
-    // switch (type) {
-    //     case SHAPE_CUBE:
-    //         shape = sphere;
-    //         break;
-    //     case SHAPE_CYLINDER:
+    switch (type) {
+        case SHAPE_CUBE:
+			drawCube();
+            // shape = sphere;
+            break;
+        case SHAPE_CYLINDER:
+			drawCylinder();
             
-    //         break;
-    //     case SHAPE_CONE:
+            break;
+        case SHAPE_CONE:
+			drawCone();
 
-    //         break;
-    //     case SHAPE_SPHERE:
-	// 		shape = sphere;
-	// 		printf("sphere\n");
+            break;
+        case SHAPE_SPHERE:
+			drawSphere();
+            break;
+        default:
             
-    //         break;
-    //     default:
-            
-    // }
+    }
     // shape->setSegments(segmentsX, segmentsY);
     // shape->draw();
 }
@@ -310,10 +311,10 @@ void MyGLCanvas::drawScene()
 	}
 	glPushMatrix();
 	glRotatef(90, 0, 1, 0);
-	// drawShape(SHAPE_SPHERE);
-	drawCone();
-	// drawCylinder();
-	// drawCube();
+	drawShape(objType);
+	// drawCone();
+	// // drawCylinder();
+	// // drawCube();
 	// myObject->drawTexturedSphere(); //TODO:draw shape here
 	
 	glPopMatrix();
