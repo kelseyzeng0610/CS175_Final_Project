@@ -35,6 +35,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	spherePosition = glm::vec3(0, 0, 0);
 
 	myObject = new SceneObject(175);
+  	// parser = NULL;
 	// sphere = new Sphere();
 
 	camera.setViewAngle(viewAngle);
@@ -52,8 +53,16 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 
 MyGLCanvas::~MyGLCanvas()
 {
-	delete sphere;
-	
+  delete cube;
+  delete cylinder;
+  delete cone;
+  delete sphere;
+}
+
+// loop over objectList and select the one that is hit by the ray
+// returns the closest object and its index
+std::pair<ObjectNode, int> MyGLCanvas::selectedObject(glm::vec3 rayOriginPoint, int mouseX, int mouseY){
+	std::pair<ObjectNode, int> closest_obj;
 }
 
 /* The generateRay function accepts the mouse click coordinates
@@ -162,15 +171,15 @@ void MyGLCanvas::draw()
 
 		// Set the base texture of our object. Note that loading gl texture can
 		//  only happen after the gl context has been established
-		if (myObject->baseTexture == NULL)
-		{
-			myObject->setTexture(0, "./data/pink.ppm");
-		}
-		// Set a second texture layer to our object
-		if (myObject->blendTexture == NULL)
-		{
-			myObject->setTexture(1, "./data/smile.ppm");
-		}
+		// if (myObject->baseTexture == NULL)
+		// {
+		// 	myObject->setTexture(0, "./data/pink.ppm");
+		// }
+		// // Set a second texture layer to our object
+		// if (myObject->blendTexture == NULL)
+		// {
+		// 	myObject->setTexture(1, "./data/smile.ppm");
+		// }
 
 		glViewport(0, 0, w(), h());
 		updateCamera(w(), h());
@@ -231,8 +240,6 @@ void MyGLCanvas::drawShape(OBJ_TYPE type) {
         default:
             
     }
-    // shape->setSegments(segmentsX, segmentsY);
-    // shape->draw();
 }
 
 void MyGLCanvas::drawSphere() {
@@ -255,6 +262,50 @@ void MyGLCanvas::drawCone() {
     cone->draw();
 }
 
+// void MyGLCanvas::drawScene() {
+// void MyGLCanvas::drawScene() {
+//     // cout << "start of drawScene" << endl;
+//     // if (parser == NULL) {
+//     //     return;
+//     // }
+
+//     glPushMatrix();
+
+//     //disable all the lights, and then enable each one...
+//     // for (int i = 0; i < NUM_OPENGL_LIGHTS; i++) {
+//     //     glDisable(GL_LIGHT0 + i);
+//     // }
+
+//     glColor3f(1, 1, 1);
+//     glEnable(GL_POLYGON_OFFSET_FILL);
+//     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+//     int i = 0;
+//     glm::mat4 my_mat = glm::mat4(1.0);
+//     for (ObjectNode node : objectList) {
+//         // glm::mat4 transform = node.transform;
+//         // glm::mat4 transformInverse = node.transformInverse;
+//         // glMultMatrixf(glm::value_ptr(transform));
+//         // // applyMaterial(node.primitive->material); 
+//         // vector<int> vect{1, 
+//         // (int)(node.shape->material.cDiffuse.channels[0] * 255.),
+//         // (int)(node.shape->material.cDiffuse.channels[1] * 255.),
+//         // (int)(node.shape->material.cDiffuse.channels[2] * 255.)};
+//         // pair<OBJ_TYPE,vector<int>> p(node.shape->type, vect);
+//         // my_mat *= transform;
+//         // drawObject(node, transform);
+//         i++;
+//         // renderShape(node.primitive->type);
+//         // glMultMatrixf(glm::value_ptr(transformInverse));        
+//     }
+
+//     // glDisable(GL_LIGHTING);
+
+//     glPopMatrix();
+//     // cout << "end of drawScene" << endl;
+// }
+
+// void MyGLCanvas::drawObject(ObjectNode node, glm::mat4 trans)
 void MyGLCanvas::drawScene()
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -359,6 +410,9 @@ int MyGLCanvas::handle(int e)
         // move sphere by same offset to maintain relative position to intersection point
         glm::vec3 offset = oldIsectPoint - oldCenter;
         spherePosition = new_intersection - offset; //TODO: change to object 
+
+		//NOTE:step 2: store new location in list
+		
     }
     return (1);
 	case FL_MOVE:
@@ -370,6 +424,7 @@ int MyGLCanvas::handle(int e)
 		break;
 	case FL_PUSH:
 		printf("mouse push\n");
+		//step 1: generate ray from mouse click
 		if ((Fl::event_button() == FL_LEFT_MOUSE) && (castRay == false))
 		{ // left mouse click -- casting Ray
 			castRay = true;
@@ -489,3 +544,273 @@ void MyGLCanvas::setShape(OBJ_TYPE type) {
     objType = type;
     printf("set shape to: %d\n", type);
 }
+void MyGLCanvas::setSegments() {
+    shape->setSegments(segmentsX, segmentsY);
+}
+
+// Logic derived from lab04
+std::vector<double> MyGLCanvas::intersectWithSphere(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
+{
+  // Transform ray and eye point to object space
+  glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
+  glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
+
+  glm::vec3 p = glm::vec3(eyePointPO);
+  glm::vec3 d = glm::normalize(glm::vec3(rayVO));
+
+  double A = glm::dot(glm::vec3(d), glm::vec3(d));
+  double B = 2.0f * glm::dot(glm::vec3(d), glm::vec3(p));
+  double C = glm::dot(glm::vec3(p), glm::vec3(p)) - 0.25;
+
+  double discriminant = (B * B) - (4.0 * A * C);
+
+  std::vector<double> results;
+
+  if (discriminant < 0)
+  {
+    return results;
+  }
+
+  // Calculate both intersection points
+  double t1 = (-B - sqrt(discriminant)) / (2.0 * A);
+  double t2 = (-B + sqrt(discriminant)) / (2.0 * A);
+
+  if (t1 > 0) results.push_back(t1);
+  if (t2 > 0) results.push_back(t2);
+
+  return results;
+}
+
+std::vector<double> MyGLCanvas::intersectWithCube(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
+{
+  // Transform eye point and ray from world coords to object space
+  glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
+  glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
+
+  glm::vec3 p = glm::vec3(eyePointPO);
+  glm::vec3 d = glm::normalize(glm::vec3(rayVO));
+
+  double t_min = INFINITY;
+  glm::vec3 intersection;
+
+  std::vector<double> results;
+
+  // Right face of cube, x = 0.5
+  if (d.x != 0)
+  {
+    double t_right = (0.5 - p.x) / d.x;
+    intersection = p + float(t_right) * d;
+    if (t_right > 0 &&
+        intersection.y >= -0.5 && intersection.y <= 0.5 &&
+        intersection.z >= -0.5 && intersection.z <= 0.5)
+    {
+      results.push_back(t_right);
+    }
+  }
+
+  // Left face of cube, x = -0.5
+  if (d.x != 0)
+  {
+    double t_left = (-0.5 - p.x) / d.x;
+    intersection = p + float(t_left) * d;
+    if (t_left > 0 &&
+        intersection.y >= -0.5 && intersection.y <= 0.5 &&
+        intersection.z >= -0.5 && intersection.z <= 0.5)
+    {
+      results.push_back(t_left);
+    }
+  }
+
+  // Top face of cube, y = 0.5
+  if (d.y != 0)
+  {
+    double t_top = (0.5 - p.y) / d.y;
+    intersection = p + float(t_top) * d;
+    if (t_top > 0 &&
+        intersection.x >= -0.5 && intersection.x <= 0.5 &&
+        intersection.z >= -0.5 && intersection.z <= 0.5)
+    {
+      results.push_back(t_top);
+    }
+  }
+
+  // Bottom face of cube, y = -0.5
+  if (d.y != 0)
+  {
+    double t_bottom = (-0.5 - p.y) / d.y;
+    intersection = p + float(t_bottom) * d;
+    if (t_bottom > 0 &&
+        intersection.x >= -0.5 && intersection.x <= 0.5 &&
+        intersection.z >= -0.5 && intersection.z <= 0.5)
+    {
+      results.push_back(t_bottom);
+    }
+  }
+
+  // Front face of cube, z = 0.5
+  if (d.z != 0)
+  {
+    double t_front = (0.5 - p.z) / d.z;
+    intersection = p + float(t_front) * d;
+    if (t_front > 0 &&
+        intersection.x >= -0.5 && intersection.x <= 0.5 &&
+        intersection.y >= -0.5 && intersection.y <= 0.5)
+    {
+      results.push_back(t_front);
+    }
+  }
+
+  // Back face of cube, z = -0.5
+  if (d.z != 0)
+  {
+    double t_back = (-0.5 - p.z) / d.z;
+    intersection = p + float(t_back) * d;
+    if (t_back > 0 &&
+        intersection.x >= -0.5 && intersection.x <= 0.5 &&
+        intersection.y >= -0.5 && intersection.y <= 0.5)
+    {
+      results.push_back(t_back);
+    }
+  }
+
+  // Return smallest positive t here
+  return results;
+}
+
+std::vector<double> MyGLCanvas::intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
+{
+  // Transform ray and eye point to object space
+  glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
+  glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
+
+  glm::vec3 p = glm::vec3(eyePointPO);
+  glm::vec3 d = glm::normalize(glm::vec3(rayVO));
+
+  double t_min = INFINITY;
+
+  // Expand (px + tdx)^2 + (pz + tdz)^2 = 0.25 to find A, B and C
+  double A = d.x * d.x + d.z * d.z;
+  double B = 2.0f * (p.x * d.x + p.z * d.z);
+  double C = p.x * p.x + p.z * p.z - 0.25;
+
+  double discriminant = (B * B) - (4.0f * A * C);
+
+  std::vector<double> results;
+
+  if (discriminant >= 0 && A != 0)
+  {
+    double t1 = (-B - sqrt(discriminant)) / (2.0 * A);
+    double t2 = (-B + sqrt(discriminant)) / (2.0 * A);
+
+    // Check if intersection y value is between (-0.5, 0.5) before potentially setting new t_min
+    if (t1 > 0)
+    {
+      glm::vec3 intersection = p + float(t1) * d;
+      if (intersection.y >= -0.5f && intersection.y <= 0.5f)
+      {
+        results.push_back(t1);
+      }
+    }
+    if (t2 > 0)
+    {
+      glm::vec3 intersection = p + float(t2) * d;
+      if (intersection.y >= -0.5f && intersection.y <= 0.5f)
+      {
+        results.push_back(t2);
+      }
+    }
+  }
+
+  // Check intersection of the two caps
+  if (d.y != 0)
+  {
+    double t_top = (0.5f - p.y) / d.y;
+    double t_bottom = (-0.5f - p.y) / d.y;
+
+    if (t_top > 0)
+    {
+      glm::vec3 intersection = p + float(t_top) * d;
+      if (intersection.x * intersection.x + intersection.z * intersection.z <= 0.25)
+      {
+        results.push_back(t_top);
+      }
+    }
+
+    if (t_bottom > 0)
+    {
+      glm::vec3 intersection = p + float(t_bottom) * d;
+      if (intersection.x * intersection.x + intersection.z * intersection.z <= 0.25)
+      {
+        results.push_back(t_bottom);
+      }
+    }
+  }
+
+  return results;
+}
+
+std::vector<double> MyGLCanvas::intersectWithCone(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
+{
+  glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
+  glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
+
+  glm::vec3 p = glm::vec3(eyePointPO);
+  glm::vec3 d = glm::normalize(glm::vec3(rayVO));
+
+  double t_min = INFINITY;
+
+  double A = d.x * d.x + d.z * d.z - 0.25 * d.y * d.y;
+  double B = 2.0f * (p.x * d.x + p.z * d.z) + (0.25 - (0.5 * p.y)) * d.y;
+  double C = p.x * p.x + p.z * p.z - 0.25 * (0.5 - p.y) * (0.5 - p.y);
+
+  double discriminant = (B * B) - (4.0f * A * C);
+
+  std::vector<double> results;
+
+  if (discriminant >= 0 && A != 0)
+  {
+    double t1 = (-B - sqrt(discriminant)) / (2.0 * A);
+    double t2 = (-B + sqrt(discriminant)) / (2.0 * A);
+
+    if (t1 > 0)
+    {
+      glm::vec3 intersection = p + float(t1) * d;
+      if (intersection.y >= -0.5f && intersection.y <= 0.5f)
+      {
+        results.push_back(t1);
+      }
+    }
+    if (t2 > 0)
+    {
+      glm::vec3 intersection = p + float(t2) * d;
+      if (intersection.y >= -0.5f && intersection.y <= 0.5f)
+      {
+        results.push_back(t2);
+      }
+    }
+  }
+
+  if (d.y != 0)
+  {
+    double t_cap = (-0.5f - p.y) / d.y;
+
+    if (t_cap > 0)
+    {
+      glm::vec3 intersection = p + float(t_cap) * d;
+      if (intersection.x * intersection.x + intersection.z * intersection.z <= 0.25)
+      {
+        results.push_back(t_cap);
+      }
+    }
+  }
+
+  return results;
+}
+
+// void MyGLCanvas::setpixel(GLubyte *buf, int x, int y, int r, int g, int b)
+// {
+//   pixelWidth = camera.getScreenWidth();
+//   buf[(y * pixelWidth + x) * 3 + 0] = (GLubyte)r;
+//   buf[(y * pixelWidth + x) * 3 + 1] = (GLubyte)g;
+//   buf[(y * pixelWidth + x) * 3 + 2] = (GLubyte)b;
+// }

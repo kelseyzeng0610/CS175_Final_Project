@@ -48,6 +48,8 @@ public:
 	Fl_Button* renderButton;
 	Fl_Slider* maxRecursionDepthSlider;
 	Fl_Button* addShapeButton;
+	Fl_Slider* segmentsXSlider;
+	Fl_Slider* segmentsYSlider;
 
 public:
 	// APP WINDOW CONSTRUCTOR
@@ -145,23 +147,30 @@ private:
 		int value = win->maxRecursionDepthSlider->value();
 		win->canvas->maxRecursionDepth = value;
 	}
+
+	static void segmentsCB(Fl_Widget* w, void* userdata) {
+		int value = ((Fl_Slider*)w)->value();
+		printf("value: %d\n", value);
+		*((int*)userdata) = value;
+		win->canvas->setSegments();
+	}
 };
 
 //TODO: DRAW SHAPES
 static void radioButtonCB(Fl_Widget* w, void* userdata) {
-        const char* value = ((Fl_Button*)w)->label();
-        if (strcmp("Cube", value) == 0) {
-            win->canvas->setShape(SHAPE_CUBE);
-        }
-        else if (strcmp("Cylinder", value) == 0) {
-            win->canvas->setShape(SHAPE_CYLINDER);
-        }
-        else if (strcmp("Cone", value) == 0) {
-            win->canvas->setShape(SHAPE_CONE);
-        }
-        else if (strcmp("Sphere", value) == 0) {
-            win->canvas->setShape(SHAPE_SPHERE);
-        }
+        // const char* value = ((Fl_Button*)w)->label();
+        // if (strcmp("Cube", value) == 0) {
+        //     win->canvas->setShape(SHAPE_CUBE);
+        // }
+        // else if (strcmp("Cylinder", value) == 0) {
+        //     win->canvas->setShape(SHAPE_CYLINDER);
+        // }
+        // else if (strcmp("Cone", value) == 0) {
+        //     win->canvas->setShape(SHAPE_CONE);
+        // }
+        // else if (strcmp("Sphere", value) == 0) {
+        //     win->canvas->setShape(SHAPE_SPHERE);
+        // }
         // else if (strcmp("Special", value) == 0) {
         //     win->canvas->setShape(SHAPE_SPECIAL1);
         // }
@@ -339,7 +348,26 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	// }
 	addShapeButton = new Fl_Button(0, 0, pack->w() - 20, 25, "Select Shape");
     addShapeButton->callback(addShapeCB, (void*)this);	// primitive properties
+	//slider for controlling number of segments in X
+	Fl_Box* segmentsXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "SegmentsX");
+	segmentsXSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	segmentsXSlider->align(FL_ALIGN_TOP);
+	segmentsXSlider->type(FL_HOR_SLIDER);
+	segmentsXSlider->bounds(3, 60);
+	segmentsXSlider->step(1);
+	segmentsXSlider->value(canvas->segmentsX);
+	segmentsXSlider->callback(segmentsCB, (void*)(&(canvas->segmentsX)));
 
+
+	//slider for controlling number of segments in Y
+	Fl_Box* segmentsYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "SegmentsY");
+	segmentsYSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	segmentsYSlider->align(FL_ALIGN_TOP);
+	segmentsYSlider->type(FL_HOR_SLIDER);
+	segmentsYSlider->bounds(3, 60);
+	segmentsYSlider->step(1);
+	segmentsYSlider->value(canvas->segmentsY);
+	segmentsYSlider->callback(segmentsCB, (void*)(&(canvas->segmentsY)));
     Fl_Box* redBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Red");
 	rSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	rSlider->align(FL_ALIGN_TOP);

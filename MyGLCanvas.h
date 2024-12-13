@@ -17,11 +17,18 @@
 #include "Cone.h"
 #include "Cube.h"
 #include "Cylinder.h"
+// #include "scene/SceneParser.h"
+// #include "gfxDefs.h"
 
 
 #define SPLINE_SIZE 100
 #define COASTER_SPEED 0.0001
 
+struct ObjectNode {
+   Shape *primitive;
+   glm::vec3 translate;
+   glm::vec3 oldCenter;
+};
 class MyGLCanvas : public Fl_Gl_Window {
 public:
 
@@ -57,6 +64,15 @@ public:
 	Shape* shape;
 	int segmentsX, segmentsY;
 
+	// used in flattened list to make update values
+	// vector<ObjectNode> objectList;
+	// glm::vec3 curr_pos;
+	// int curr_idx;
+
+
+	// SceneParser* parser;
+	// GLubyte* pixels = NULL;
+
 
 MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
@@ -64,10 +80,12 @@ MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	void setShape(OBJ_TYPE type);
 	void drawShape(OBJ_TYPE type);
 	void drawScene();
+	// void drawObject(ObjectNode node, glm::mat4 trans);
 	void drawSphere();
 	void drawCube();
 	void drawCylinder();
 	void drawCone();
+	void setSegments();
 
 private:
 	glm::vec3 generateRay(int pixelX, int pixelY);
@@ -98,6 +116,14 @@ private:
 	int mouseX = 0;
 	int mouseY = 0;
 
+	std::vector<double> intersectWithSphere(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	std::vector<double> intersectWithCube(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	std::vector<double> intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	std::vector<double> intersectWithCone(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	// void storeObjects(SceneNode* node, glm::mat4 parent_transform);
+	// void setpixel(GLubyte* buf, int x, int y, int r, int g, int b);
+	// void getClosestT();
+	std::pair<ObjectNode, int> selectedObject(glm::vec3 eye_pnt, int mouseX, int mouseY);
 
 };
 
