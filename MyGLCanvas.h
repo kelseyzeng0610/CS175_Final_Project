@@ -18,14 +18,22 @@
 #include <iostream>
 
 #include "SceneObject.h"
-#include "ShaderManager.h"
-#include "ply.h"
-#include "gfxDefs.h"
+#include "Camera.h"
+#include "Shape.h"
+#include "Sphere.h"
+#include "Cone.h"
+#include "Cube.h"
+#include "Cylinder.h"
+// #include "scene/SceneParser.h"
+// #include "gfxDefs.h"
 
-class ShaderManager;
-class ply;
 
 
+struct ObjectNode {
+   Shape *primitive;
+   glm::vec3 translate;
+   glm::vec3 oldCenter;
+};
 class MyGLCanvas : public Fl_Gl_Window {
 public:
 
@@ -45,15 +53,49 @@ public:
 	std::vector<ply*> scenePLYObjects;
 	void addPLY(const std::string& plyFile);
 
-	MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
-	~MyGLCanvas();
-	
+	int   smooth;
+    int   fill;
+    int   normal;
 
-	void reloadShaders();
+	float pixelWidth;
+	float pixelHeight;
+	float scale;
+	OBJ_TYPE objType;
+
+	int isectOnly;
+	int maxRecursionDepth;
+	Sphere* sphere;
+	Cube* cube;
+	Cone* cone;
+	Cylinder* cylinder;
+	Shape* shape;
+	int segmentsX, segmentsY;
+
+	// used in flattened list to make update values
+	// vector<ObjectNode> objectList;
+	// glm::vec3 curr_pos;
+	// int curr_idx;
+
+
+	// SceneParser* parser;
+	// GLubyte* pixels = NULL;
+
+
+MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
+	~MyGLCanvas();
+	void resetScene();
+	void setShape(OBJ_TYPE type);
+	void drawShape(OBJ_TYPE type);
+	void drawScene();
+	// void drawObject(ObjectNode node, glm::mat4 trans);
+	void drawSphere();
+	void drawCube();
+	void drawCylinder();
+	void drawCone();
+	void setSegments();
 
 private:
 	void draw();
-	void drawScene();
 
 	void initShaders();
 
@@ -62,9 +104,27 @@ private:
 	void updateCamera(int width, int height);
 
 	SceneObject* myObject;
-	ShaderManager* myShaderManager;
-	ply* myPLY;
-	
+	Camera camera;
+	bool castRay;
+	bool drag;
+	glm::vec3 oldCenter;
+	glm::vec3 oldIsectPoint;
+	float oldT;
+
+	//// Used for intersection
+	glm::vec3 spherePosition;
+
+	int mouseX = 0;
+	int mouseY = 0;
+
+	std::vector<double> intersectWithSphere(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	std::vector<double> intersectWithCube(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	std::vector<double> intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	std::vector<double> intersectWithCone(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	// void storeObjects(SceneNode* node, glm::mat4 parent_transform);
+	// void setpixel(GLubyte* buf, int x, int y, int r, int g, int b);
+	// void getClosestT();
+	std::pair<ObjectNode, int> selectedObject(glm::vec3 eye_pnt, int mouseX, int mouseY);
 
 	bool firstTime;
 };
