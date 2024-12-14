@@ -57,33 +57,34 @@ public:
 
 	static void idleCB(void* userdata) {
 		win->canvas->redraw();
+		// updateGUIValues();
 	}
 
 	void updateGUIValues() {
-		//TODO: reset values to default
-        // wireButton->value(canvas->wireframe);
-        // fillButton->value(canvas->fill);
-        // smoothButton->value(canvas->smooth);
-        // normalButton->value(canvas->normal);
+	// 	TODO: reset values to default
+    //     wireButton->value(canvas->wireframe);
+    //     fillButton->value(canvas->fill);
+    //     smoothButton->value(canvas->smooth);
+    //     normalButton->value(canvas->normal);
 
-        // segmentsXSlider->value(canvas->segmentsX);
-        // segmentsYSlider->value(canvas->segmentsY);
+    //     segmentsXSlider->value(canvas->segmentsX);
+    //     segmentsYSlider->value(canvas->segmentsY);
 
-        // rotUSlider->value(canvas->camera->rotU);
-        // rotVSlider->value(canvas->camera->rotV);
-        // rotWSlider->value(canvas->camera->rotW);
+    //     rotUSlider->value(canvas->camera->rotU);
+    //     rotVSlider->value(canvas->camera->rotV);
+    //     rotWSlider->value(canvas->camera->rotW);
 
-        // eyeXSlider->value(canvas->camera->getEyePoint().x);
-        // eyeYSlider->value(canvas->camera->getEyePoint().y);
-        // eyeZSlider->value(canvas->camera->getEyePoint().z);
+    //     eyeXSlider->value(canvas->camera->getEyePoint().x);
+    //     eyeYSlider->value(canvas->camera->getEyePoint().y);
+    //     eyeZSlider->value(canvas->camera->getEyePoint().z);
 
-        // lookXSlider->value(canvas->camera->getLookVector().x);
-        // lookYSlider->value(canvas->camera->getLookVector().y);
-        // lookZSlider->value(canvas->camera->getLookVector().z);
+    //     lookXSlider->value(canvas->camera->getLookVector().x);
+    //     lookYSlider->value(canvas->camera->getLookVector().y);
+    //     lookZSlider->value(canvas->camera->getLookVector().z);
 
-        // nearSlider->value(canvas->camera->getNearPlane());
-        // farSlider->value(canvas->camera->getFarPlane());
-        // angleSlider->value(canvas->camera->getViewAngle());
+    //     nearSlider->value(canvas->camera->getNearPlane());
+    //     farSlider->value(canvas->camera->getFarPlane());
+    //     angleSlider->value(canvas->camera->getViewAngle());
     }
 
 private:

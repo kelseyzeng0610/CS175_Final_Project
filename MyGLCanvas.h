@@ -76,12 +76,7 @@ public:
 
 	// used in flattened list to make update values
 	std::vector<ObjectNode> objectList;
-	// glm::vec3 curr_pos;
-	// int curr_idx;
-
-
-	// SceneParser* parser;
-	// GLubyte* pixels = NULL;
+	
 
 
 MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
@@ -95,9 +90,10 @@ MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	void drawCone();
 	void setSegments();
 	void addObject(OBJ_TYPE type);
+	int handle(int e) override;
 	void drawObjects();
 	void setupCamera();
-	// void selectObject(int mouseX, int mouseY);
+	int selectObject(int mouseX, int mouseY);
 
 
 
@@ -114,7 +110,7 @@ private:
 	void drawAxis();
 	void drawGrid();
 
-	int handle(int);
+	
 	void resize(int x, int y, int w, int h);
 	void updateCamera(int width, int height);
 

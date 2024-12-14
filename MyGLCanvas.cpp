@@ -79,21 +79,21 @@ MyGLCanvas::~MyGLCanvas()
 
 // loop over objectList and select the one that is hit by the ray
 // returns the closest object and its index
-std::pair<ObjectNode, int> MyGLCanvas::closestObject(glm::vec3 rayOriginPoint, int mouseX, int mouseY){
-	std::pair<ObjectNode, int> closest_obj_info;
+// std::pair<ObjectNode, int> MyGLCanvas::closestObject(glm::vec3 rayOriginPoint, int mouseX, int mouseY){
+// 	std::pair<ObjectNode, int> closest_obj_info;
 
-	glm::vec3 intersection_obj = glm::vec3(0);
-	glm::vec3 intersection = glm::vec3(0);
-	glm::vec3 normal = glm::vec3(0);
+// 	glm::vec3 intersection_obj = glm::vec3(0);
+// 	glm::vec3 intersection = glm::vec3(0);
+// 	glm::vec3 normal = glm::vec3(0);
 
-	ObjectNode* closest_obj = nullptr;
-	double closest_t = INFINITY;
+// 	ObjectNode* closest_obj = nullptr;
+// 	double closest_t = INFINITY;
 
-	ObjectNode small;
+// 	ObjectNode small;
 
  
-	return closest_obj_info;
-}
+// 	return closest_obj_info;
+// }
 
 glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
 {
@@ -231,10 +231,10 @@ void MyGLCanvas::draw()
 
 
 void MyGLCanvas::drawObjects(){
-   printf("Drawing Objects: Count = %zu\n", objectList.size());
+   
 
   for(ObjectNode obj: objectList){
-    printf("Drawing Object ID %d\n", obj.id);
+    // printf("Drawing Object ID %d\n", obj.id);
 
     glPushMatrix();
     glScalef(obj.scale.x, obj.scale.y, obj.scale.z);
@@ -262,6 +262,82 @@ void MyGLCanvas::drawObjects(){
   }
 }
 
+
+int MyGLCanvas::selectObject(int mouseX, int mouseY){
+
+  printf("Selecting Object\n");
+  glm::vec3 eyePoint = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
+  glm::vec3 ray = generateRay(mouseX, mouseY);
+
+  ObjectNode* closest_obj = nullptr;
+
+  int selectedObjId = -1;
+  float closest_t = INFINITY;
+  std::vector<double> results;
+  for(ObjectNode obj: objectList){
+    results.clear();
+    glm::vec3 objScale = obj.scale;
+    glm::vec3 objTranslate = obj.translate;
+    glm::vec3 objRotation = obj.rotation;
+
+    glm::mat4 transformMatrix = glm::translate(glm::mat4(1.0f), objTranslate) * 
+                                glm::rotate(glm::mat4(1.0f), glm::radians(objRotation.x), glm::vec3(1.0f, 0.0f, 0.0f)) *
+                                glm::rotate(glm::mat4(1.0f), glm::radians(objRotation.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                                glm::rotate(glm::mat4(1.0f), glm::radians(objRotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
+                                glm::scale(glm::mat4(1.0f), objScale);
+    glm::mat4 invTransformMatrix = glm::inverse(transformMatrix); 
+
+    glm::vec3 invRay = glm::vec3(invTransformMatrix * glm::vec4(ray, 0.0f));
+    glm::vec3 invEyePoint = glm::vec3(invTransformMatrix * glm::vec4(eyePoint, 1.0f));
+    glm::vec3 p = glm::vec3(invEyePoint);
+    glm::vec3 d = glm::normalize(glm::vec3(invRay));
+
+
+    switch(obj.primitive->getType()){
+      case SHAPE_CUBE:
+        results = intersectWithCube(invEyePoint, invRay, invTransformMatrix);
+        break;
+      case SHAPE_SPHERE:
+        results = intersectWithSphere(invEyePoint, invRay, invTransformMatrix);
+        break;
+      case SHAPE_CYLINDER:
+       results = intersectWithCylinder(invEyePoint, invRay, invTransformMatrix);
+        break;
+      case SHAPE_CONE:
+         results= intersectWithCone(invEyePoint, invRay, invTransformMatrix);
+        break;
+      default:
+        obj.primitive = nullptr;
+        break;
+    }
+    for (double t : results) {
+                      if (t > 0) {
+                          glm::vec3 obj_intersection = p + float(t) * d;
+                          glm::vec4 world_intersection = transformMatrix * glm::vec4(obj_intersection, 1.0f);
+                          double dist = glm::length(glm::vec3(world_intersection) - eyePoint);
+
+                          if (dist < closest_t) {
+                              closest_t = dist;
+                              closest_obj = &obj;
+                          }
+                      }
+                  }
+
+
+  }
+  if (closest_obj != nullptr) {
+    selectedObjId = closest_obj->id;
+    return selectedObjId;
+    printf("Selected Object ID: %d\n", selectedObjId);
+  } else {
+    printf("No object selected\n");
+    return -1;
+  }
+
+
+
+
+}
 
 
 
@@ -350,7 +426,7 @@ void MyGLCanvas::updateCamera(int width, int height)
 
 int MyGLCanvas::handle(int e)
 {
-
+  printf("Event happened: %d\n", e);
 	switch (e)
 	{
 	case FL_DRAG:
@@ -385,10 +461,14 @@ int MyGLCanvas::handle(int e)
 		if ((Fl::event_button() == FL_LEFT_MOUSE) && (castRay == false))
 		{ 
 			castRay = true;
+      int selected = selectObject(mouseX, mouseY);
+      printf("Selected Object ID: %d\n", selected);
+      return 1;
 		}
 		else if ((Fl::event_button() == FL_RIGHT_MOUSE) && (drag == false))
 		{ 
-		
+      
+      // move the selected object 
 			glm::vec3 eyePointP = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
 			glm::vec3 rayV = generateRay(mouseX, mouseY);
 			glm::vec3 sphereTransV(spherePosition[0], spherePosition[1], spherePosition[2]);
@@ -443,7 +523,7 @@ int MyGLCanvas::handle(int e)
 		break;
 	}
 
-	return Fl_Gl_Window::handle(e);
+	  return Fl_Gl_Window::handle(e);
 }
 
 void MyGLCanvas::resize(int x, int y, int w, int h)

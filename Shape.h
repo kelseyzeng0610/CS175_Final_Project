@@ -27,6 +27,7 @@ class Shape
 public:
 	static int m_segmentsX;
 	static int m_segmentsY;
+	
 
 	// Points List
 	static std::vector<std::array<float, 3>> m_points;
