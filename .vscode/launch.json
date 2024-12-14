@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/apple/Documents/CS175_Final_Project",
+      "program": "/Users/apple/Documents/CS175_Final_Project/build/Debug/outDebug"
+    }
+  ]
+}

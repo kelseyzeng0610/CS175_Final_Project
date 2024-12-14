@@ -48,17 +48,18 @@ ppm::ppm(std::string _fileName){
 		  strcpy(copy, line.c_str());
 		  delimeter_pointer = strtok(copy, " ");
 
+		  if (copy[0] == '#') {
+			  continue;
+		  }
+
 		  // Read in the magic number
 		  if (iteration == 0) {
 			  magicNumber = delimeter_pointer;
 			  std::cout << "Magic Number: " << magicNumber << " ";
 			  std::cout << std::endl;
 		  }
-		  else if (iteration == 1) {
-			  std::cout << line << std::endl;
-		  }
 		  // Read in dimensions
-		  else if (iteration == 2) {
+		  else if (iteration == 1) {
 			  width = atoi(delimeter_pointer);
 			  std::cout << "width: " << width << " ";
 			  delimeter_pointer = strtok(NULL, " ");
@@ -77,17 +78,15 @@ ppm::ppm(std::string _fileName){
 				  exit(1);
 			  }
 		  }
-		  else if (iteration == 3) {
+		  else if (iteration == 2) {
 			  std::cout << "color range: 0-" << delimeter_pointer << std::endl;
-		  }
-		  else {
-			  // Iterate through the entire line and begin storing values
-			  while (delimeter_pointer != NULL) {
-				  //std::cout << delimeter_pointer << " ";
-				  int value = atoi(delimeter_pointer);
-				  color[pos] = (char)value;
-				  pos++;
-				  delimeter_pointer = strtok(NULL, " ");
+
+			  int num = width * height * 3;
+			  for (int i = 0; i < num; i++) {
+				  int value;
+				  ppmFile >> value;
+                  //std::cout << i << ": " << value << std::endl;
+				  color[i] = value;
 			  }
 		  }
 		  delete copy;
@@ -96,9 +95,8 @@ ppm::ppm(std::string _fileName){
 	  ppmFile.close();
   }
   else{
-      std::cout << "Unable to open ppm file" << std::endl;
+      std::cout << "Unable to open ppm file: " << _fileName << std::endl;
   } 
-
 }
 
 
@@ -145,4 +143,17 @@ void ppm::setPixel(int x, int y, int r, int g, int b){
     std::cout << " to (" << (int)color[x*y] << "," << (int)color[x*y+1] << "," << (int)color[x*y+2] << ")" << std::endl;
 */
   }
+}
+
+unsigned int ppm::createAsTexture() {
+	unsigned int textureNum;
+
+	glGenTextures(1, &textureNum);
+
+	glBindTexture(GL_TEXTURE_2D, textureNum);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, color);
+
+	return textureNum;
 }

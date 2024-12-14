@@ -1,3 +1,12 @@
+/*  =================== File Information =================
+	File Name: main.cpp
+	Description:
+	Author: Michael Shah
+
+	Purpose: Driver for 3D program to load .ply models
+	Usage:
+	===================================================== */
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -11,12 +20,6 @@
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Gl_Window.H>
 #include <FL/names.h>
-#include <FL/gl.h>
-#include <FL/glut.h>
-#include <FL/glu.h>
-
-#include <FL/Fl_Round_Button.H>
-#include <FL/Fl_Value_Slider.H>
 
 #include "MyGLCanvas.h"
 
@@ -27,22 +30,17 @@ MyAppWindow *win;
 
 class MyAppWindow : public Fl_Window {
 public:
-	Fl_Button* wireButton;
-	Fl_Button* drawButton;
-	Fl_Button *smoothButton;
-	Fl_Button *fillButton;
-    Fl_Button *normalButton;
-	Fl_Button* resetSceneButton;
-    Fl_Slider *rotXSlider;
-    Fl_Slider *rotYSlider;
-    Fl_Slider *rotZSlider;
-    Fl_Slider *scaleSlider;
-	MyGLCanvas* canvas;
+	Fl_Slider* rotXSlider;
+	Fl_Slider* rotYSlider;
+	Fl_Slider* rotZSlider;
+	Fl_Slider* scaleSlider;
+	Fl_Button* reloadButton;
+	Fl_Button* animateLightButton;
+	Fl_Button* addShapeButton;
 
-	Fl_Slider* rSlider;
-    Fl_Slider* gSlider;
-    Fl_Slider* bSlider;
-	Fl_Slider* sizeSlider;
+
+
+	MyGLCanvas* canvas;
 
 	Fl_Button* isectButton;
 	Fl_Button* renderButton;
@@ -59,45 +57,21 @@ public:
 		win->canvas->redraw();
 	}
 
-	void updateGUIValues() {
-		//TODO: reset values to default
-        // wireButton->value(canvas->wireframe);
-        // fillButton->value(canvas->fill);
-        // smoothButton->value(canvas->smooth);
-        // normalButton->value(canvas->normal);
-
-        // segmentsXSlider->value(canvas->segmentsX);
-        // segmentsYSlider->value(canvas->segmentsY);
-
-        // rotUSlider->value(canvas->camera->rotU);
-        // rotVSlider->value(canvas->camera->rotV);
-        // rotWSlider->value(canvas->camera->rotW);
-
-        // eyeXSlider->value(canvas->camera->getEyePoint().x);
-        // eyeYSlider->value(canvas->camera->getEyePoint().y);
-        // eyeZSlider->value(canvas->camera->getEyePoint().z);
-
-        // lookXSlider->value(canvas->camera->getLookVector().x);
-        // lookYSlider->value(canvas->camera->getLookVector().y);
-        // lookZSlider->value(canvas->camera->getLookVector().z);
-
-        // nearSlider->value(canvas->camera->getNearPlane());
-        // farSlider->value(canvas->camera->getFarPlane());
-        // angleSlider->value(canvas->camera->getViewAngle());
-    }
-
 private:
 	// Someone changed one of the sliders
+	static void rotateCB(Fl_Widget* w, void* userdata) {
+		float value = ((Fl_Slider*)w)->value();
+		*((float*)userdata) = value;
+	}
+
 	static void toggleCB(Fl_Widget* w, void* userdata) {
 		int value = ((Fl_Button*)w)->value();
 		printf("value: %d\n", value);
 		*((int*)userdata) = value;
 	}
 
-	static void sliderCB(Fl_Widget* w, void* userdata) {
-		int value = ((Fl_Slider*)w)->value();
-		printf("value: %d\n", value);
-		*((float*)userdata) = value;
+	static void reloadCB(Fl_Widget* w, void* userdata) {
+		win->canvas->reloadShaders();
 	}
 
 	static void sliderFloatCB(Fl_Widget *w, void *userdata) {
@@ -255,12 +229,13 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	begin();
 	// OpenGL window
 
-	canvas = new MyGLCanvas(10, 10, w() - 320, h() - 20);
+	canvas = new MyGLCanvas(10, 10, w() - 110, h() - 20);
 
-	Fl_Pack* pack = new Fl_Pack(w() - 310, 30, 150, h(), "");
+	Fl_Pack* pack = new Fl_Pack(w() - 100, 30, 100, h(), "Control Panel");
 	pack->box(FL_DOWN_FRAME);
+	pack->labelfont(1);
 	pack->type(Fl_Pack::VERTICAL);
-	pack->spacing(30);
+	pack->spacing(0);
 	pack->begin();
 
     Fl_Pack* loadPack = new Fl_Pack(w() - 100, 30, 100, h(), "Reset");
@@ -320,54 +295,33 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 
 	// options for drawing primitive
 	Fl_Pack* radioPack = new Fl_Pack(w() - 100, 30, 100, h(), "Shape");
-	// radioPack->box(FL_DOWN_FRAME);
-	// radioPack->labelfont(1);
-	// radioPack->type(Fl_Pack::VERTICAL);
-	// radioPack->spacing(0);
-	// radioPack->begin();
-	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cube");
-	// tmpButton->type(102);
-	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	// tmpButton->value(1);
-	// tmpButton->callback((Fl_Callback*)radioButtonCB);
-	// }
-	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cylinder");
-	// tmpButton->type(102);
-	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	// tmpButton->callback((Fl_Callback*)radioButtonCB);
-	// }
-	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cone");
-	// tmpButton->type(102);
-	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	// tmpButton->callback((Fl_Callback*)radioButtonCB);
-	// }
-	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Sphere");
-	// tmpButton->type(102);
-	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	// tmpButton->callback((Fl_Callback*)radioButtonCB);
-	// }
-	addShapeButton = new Fl_Button(0, 0, pack->w() - 20, 25, "Select Shape");
-    addShapeButton->callback(addShapeCB, (void*)this);	// primitive properties
-	//slider for controlling number of segments in X
-	Fl_Box* segmentsXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "SegmentsX");
-	segmentsXSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	segmentsXSlider->align(FL_ALIGN_TOP);
-	segmentsXSlider->type(FL_HOR_SLIDER);
-	segmentsXSlider->bounds(3, 60);
-	segmentsXSlider->step(1);
-	segmentsXSlider->value(canvas->segmentsX);
-	segmentsXSlider->callback(segmentsCB, (void*)(&(canvas->segmentsX)));
-
-
-	//slider for controlling number of segments in Y
-	Fl_Box* segmentsYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "SegmentsY");
-	segmentsYSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	segmentsYSlider->align(FL_ALIGN_TOP);
-	segmentsYSlider->type(FL_HOR_SLIDER);
-	segmentsYSlider->bounds(3, 60);
-	segmentsYSlider->step(1);
-	segmentsYSlider->value(canvas->segmentsY);
-	segmentsYSlider->callback(segmentsCB, (void*)(&(canvas->segmentsY)));
+	radioPack->box(FL_DOWN_FRAME);
+	radioPack->labelfont(1);
+	radioPack->type(Fl_Pack::VERTICAL);
+	radioPack->spacing(0);
+	radioPack->begin();
+	{ Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cube");
+	tmpButton->type(102);
+	tmpButton->down_box(FL_ROUND_DOWN_BOX);
+	tmpButton->value(1);
+	tmpButton->callback((Fl_Callback*)radioButtonCB);
+	}
+	{ Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cylinder");
+	tmpButton->type(102);
+	tmpButton->down_box(FL_ROUND_DOWN_BOX);
+	tmpButton->callback((Fl_Callback*)radioButtonCB);
+	}
+	{ Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cone");
+	tmpButton->type(102);
+	tmpButton->down_box(FL_ROUND_DOWN_BOX);
+	tmpButton->callback((Fl_Callback*)radioButtonCB);
+	}
+	{ Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Sphere");
+	tmpButton->type(102);
+	tmpButton->down_box(FL_ROUND_DOWN_BOX);
+	tmpButton->callback((Fl_Callback*)radioButtonCB);
+	}
+	// primitive properties
     Fl_Box* redBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Red");
 	rSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	rSlider->align(FL_ALIGN_TOP);
@@ -423,43 +377,65 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	cameraPack->begin();
 
 	Fl_Box *rotXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateX");
-	rotXSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	rotXSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	rotXSlider->align(FL_ALIGN_TOP);
 	rotXSlider->type(FL_HOR_SLIDER);
 	rotXSlider->bounds(-359, 359);
 	rotXSlider->step(1);
 	rotXSlider->value(canvas->rotVec.x);
-	rotXSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.x)));
+	rotXSlider->callback(rotateCB, (void*)(&(canvas->rotVec.x)));
 
 	Fl_Box *rotYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateY");
-	rotYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	rotYSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	rotYSlider->align(FL_ALIGN_TOP);
 	rotYSlider->type(FL_HOR_SLIDER);
 	rotYSlider->bounds(-359, 359);
 	rotYSlider->step(1);
 	rotYSlider->value(canvas->rotVec.y);
-	rotYSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.y)));
+	rotYSlider->callback(rotateCB, (void*)(&(canvas->rotVec.y)));
 
 	Fl_Box *rotZTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateZ");
-	rotZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	rotZSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	rotZSlider->align(FL_ALIGN_TOP);
 	rotZSlider->type(FL_HOR_SLIDER);
 	rotZSlider->bounds(-359, 359);
 	rotZSlider->step(1);
 	rotZSlider->value(canvas->rotVec.z);
-	rotZSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.z)));
+	rotZSlider->callback(rotateCB, (void*)(&(canvas->rotVec.z)));
 
 	Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale");
-	scaleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	scaleSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	scaleSlider->align(FL_ALIGN_TOP);
 	scaleSlider->type(FL_HOR_SLIDER);
-	scaleSlider->bounds(0.1, 2);
-	scaleSlider->value(canvas->scale);
-	scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
+	scaleSlider->bounds(1, 5);
+	scaleSlider->step(0.1);
+	scaleSlider->value(canvas->scaleFactor);
+	scaleSlider->callback(rotateCB, (void*)(&(canvas->scaleFactor)));
 
-	cameraPack->end();
-	packCol2->end();
-	// pack -> end();
+	addShapeButton = new Fl_Button(0, 0, pack->w() - 20, 25, "Add Shape");
+    addShapeButton->callback(addShapeCB, (void*)this);
+
+	pack->end();
+
+
+	Fl_Pack* packShaders = new Fl_Pack(w() - 100, 230, 100, h(), "Shaders");
+	packShaders->box(FL_DOWN_FRAME);
+	packShaders->labelfont(1);
+	packShaders->type(Fl_Pack::VERTICAL);
+	packShaders->spacing(0);
+	packShaders->begin();
+
+	animateLightButton = new Fl_Check_Button(0, 100, pack->w() - 20, 20, "Animate Light");
+	animateLightButton->callback(toggleCB, (void*)(&(canvas->animateLight)));
+	animateLightButton->value(canvas->animateLight);
+
+
+	reloadButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Reload");
+	reloadButton->callback(reloadCB, (void*)this);
+
+	packShaders->end();
+
+
 
 	end();
 }
@@ -467,7 +443,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 
 /**************************************** main() ********************/
 int main(int argc, char **argv) {
-	win = new MyAppWindow(900, 600, "Dragging Object");
+	win = new MyAppWindow(600, 500, "Normal Mapping");
 	win->resizable(win);
 	Fl::add_idle(MyAppWindow::idleCB);
 	win->show();

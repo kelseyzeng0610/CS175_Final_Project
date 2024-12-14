@@ -60,7 +60,9 @@ class ppm{
 		int getWidth() { return width;}
 		int getHeight() { return height;}
 		char* getPixels() { return color;}
-	private:
+
+		unsigned int createAsTexture();
+private:
 		std::string magicNumber;	// Used in the header to determine
 									// how to parse this file. Example, P3, P6, etc.
 		int width;		
