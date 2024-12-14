@@ -24,17 +24,27 @@
 #define SPLINE_SIZE 100
 #define COASTER_SPEED 0.0001
 
+
+
 struct ObjectNode {
-   Shape *primitive;
+	int id;
+//    Shape *primitive;
+   Shape* primitive;
+   glm::vec3 scale;
+   glm::vec3 rotation;
    glm::vec3 translate;
-   glm::vec3 oldCenter;
+   glm::vec3 oldCenter; 
 };
+
+
+
 class MyGLCanvas : public Fl_Gl_Window {
 public:
 
 	// Length of our spline (i.e how many points do we randomly generate)
 
-
+	static int selectedObjId;
+	static int nextObjectId;
 	glm::vec3 eyePosition;
 	glm::vec3 rotVec;
 	glm::vec3 lookatPoint;
@@ -78,14 +88,20 @@ MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
 	void resetScene();
 	void setShape(OBJ_TYPE type);
-	void drawShape(OBJ_TYPE type);
-	void drawScene();
 	// void drawObject(ObjectNode node, glm::mat4 trans);
 	void drawSphere();
 	void drawCube();
 	void drawCylinder();
 	void drawCone();
 	void setSegments();
+	void addObject(OBJ_TYPE type);
+	void drawObjects();
+	void setupCamera();
+	// void selectObject(int mouseX, int mouseY);
+
+
+
+	
 
 private:
 	glm::vec3 generateRay(int pixelX, int pixelY);

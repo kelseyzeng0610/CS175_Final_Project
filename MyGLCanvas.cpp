@@ -3,8 +3,11 @@
 
 int Shape::m_segmentsX;
 int Shape::m_segmentsY;
+int MyGLCanvas::nextObjectId = 0;
+int MyGLCanvas::selectedObjId = -1;
 
-// Data structures required for rendering shapes
+
+
 int Shape::lastIndex;
 std::vector<std::array<float, 3>> Shape::m_points;
 std::unordered_map<int, glm::vec3> Shape::m_normals;
@@ -16,9 +19,11 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 {
 	mode(FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
-	eyePosition = glm::vec3(0.0f, 0.0f, 3.0f);
+	eyePosition = glm::vec3(0.0f, 0.0f, 5.0f);
 	lookatPoint = glm::vec3(0.0f, 0.0f, 0.0f);
 	rotVec = glm::vec3(0.0f, 0.0f, 0.0f);
+  nextObjectId = 0;
+  selectedObjId = -1;
 
 	pixelWidth = w;
 	pixelHeight = h;
@@ -34,22 +39,32 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	mouseY = 0;
 	spherePosition = glm::vec3(0, 0, 0);
 
-	myObject = new SceneObject(175);
-  	// parser = NULL;
-	// sphere = new Sphere();
+	
 
 	camera.setViewAngle(viewAngle);
 	camera.setNearPlane(clipNear);
 	camera.setFarPlane(clipFar);
 	// Set the mode so we are modifying our objects.
-	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+	// camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+  camera.orientLookVec(glm::vec3(0.0f, 0.0f, 3.0f), 
+                         glm::vec3(0.0f, 0.0f, 0.0f), 
+                         glm::vec3(0.0f, 1.0f, 0.0f));
 	isectOnly = 1;
 	segmentsX = segmentsY = 10;
-	sphere = new Sphere();
-	cube = new Cube();
-	cylinder = new Cylinder();
-	cone = new Cone();
+	
+
+  //  addObject(SHAPE_CUBE);
 }
+
+void MyGLCanvas::setupCamera() {
+    
+    glm::mat4 view = glm::lookAt(eyePosition, lookatPoint, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(glm::value_ptr(view));
+}
+
 
 MyGLCanvas::~MyGLCanvas()
 {
@@ -57,6 +72,9 @@ MyGLCanvas::~MyGLCanvas()
   delete cylinder;
   delete cone;
   delete sphere;
+  objectList.clear();
+  
+
 }
 
 // loop over objectList and select the one that is hit by the ray
@@ -72,17 +90,11 @@ std::pair<ObjectNode, int> MyGLCanvas::closestObject(glm::vec3 rayOriginPoint, i
 	double closest_t = INFINITY;
 
 	ObjectNode small;
-	// for (ObjectNode my_p : objectList) {
-	// }
+
  
 	return closest_obj_info;
 }
 
-/* The generateRay function accepts the mouse click coordinates
-	(in x and y, which will be integers between 0 and screen width and 0 and screen height respectively).
-	 The function returns the ray
-*/
-// Get eyePos and point on far plane in world space, then calculate and normalize ray direction
 glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
 {
 	glm::vec3 eyePos = camera.getEyePoint();
@@ -111,27 +123,11 @@ glm::vec3 MyGLCanvas::getEyePoint(int pixelX, int pixelY, int screenWidth, int s
 	return glm::vec3(worldPoint);
 }
 
-/* The getIsectPointWorldCoord function accepts three input parameters:
-	(1) the eye point (in world coordinate)
-	(2) the ray vector (in world coordinate)
-	(3) the "t" value
-
-	The function should return the intersection point on the sphere
-*/
 glm::vec3 MyGLCanvas::getIsectPointWorldCoord(glm::vec3 eye, glm::vec3 ray, float t)
 {
 	return eye + ray * t;
 }
 
-/* The intersect function accepts three input parameters:
-	(1) the eye point (in world coordinate)
-	(2) the ray vector (in world coordinate)
-	(3) the transform matrix that would be applied to there sphere to transform it from object coordinate to world coordinate
-
-	The function should return:
-	(1) a -1 if no intersection is found
-	(2) OR, the "t" value which is the distance from the origin of the ray to the (nearest) intersection point on the sphere
-*/
 double MyGLCanvas::intersect(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
 {
 	// transform eye point and ray into object space
@@ -176,23 +172,15 @@ double MyGLCanvas::intersect(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 tran
 
 void MyGLCanvas::draw()
 {
+  
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 	if (!valid())
 	{ // this is called when the GL canvas is set up for the first time or when it is resized...
 		printf("establishing GL context\n");
 
-		// Set the base texture of our object. Note that loading gl texture can
-		//  only happen after the gl context has been established
-		// if (myObject->baseTexture == NULL)
-		// {
-		// 	myObject->setTexture(0, "./data/pink.ppm");
-		// }
-		// // Set a second texture layer to our object
-		// if (myObject->blendTexture == NULL)
-		// {
-		// 	myObject->setTexture(1, "./data/smile.ppm");
-		// }
+	
 
 		glViewport(0, 0, w(), h());
 		updateCamera(w(), h());
@@ -226,54 +214,54 @@ void MyGLCanvas::draw()
 	// Clear the buffer of colors in each bit plane.
 	// bit plane - A set of bits that are on or off (Think of a black and white image)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	drawScene();
+
+
+  glMatrixMode(GL_MODELVIEW);
+	// Se
+	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+	glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
+	drawObjects();
+  drawAxis();
+
+  glFlush();
     
-	drawAxis();
+	
 }
 
-void MyGLCanvas::drawShape(OBJ_TYPE type) {
-	// printf("drawing here\n");
 
-    switch (type) {
-        case SHAPE_CUBE:
-			drawCube();
-            // shape = sphere;
-            break;
-        case SHAPE_CYLINDER:
-			drawCylinder();
-            
-            break;
-        case SHAPE_CONE:
-			drawCone();
 
-            break;
-        case SHAPE_SPHERE:
-			drawSphere();
-            break;
-        default:
-            
-    }
+void MyGLCanvas::drawObjects(){
+   printf("Drawing Objects: Count = %zu\n", objectList.size());
+
+  for(ObjectNode obj: objectList){
+    printf("Drawing Object ID %d\n", obj.id);
+
+    glPushMatrix();
+    glScalef(obj.scale.x, obj.scale.y, obj.scale.z);
+    glRotatef(obj.rotation.x, 1.0f, 0.0f, 0.0f);
+    glRotatef(obj.rotation.y, 0.0f, 1.0f, 0.0f);
+    glRotatef(obj.rotation.z, 0.0f, 0.0f, 1.0f);
+    glTranslatef(obj.translate.x, obj.translate.y, obj.translate.z);
+    glColor3f(1.0f, 1.0f, 1.0f); 
+ if (wireframe) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glColor3f(1.0f, 1.0f, 1.0f);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glColor3f(1.0f, 1.0f, 1.0f);
+        }
+
+     if (obj.primitive != nullptr) {
+    obj.primitive->draw();
+} else {
+    printf("Object ID %d has a null primitive\n", obj.id);
+}
+    
+     glPopMatrix();
+    
+  }
 }
 
-void MyGLCanvas::drawSphere() {
-	sphere->setSegments(segmentsX, segmentsY);
-    sphere->draw();
-}
-
-void MyGLCanvas::drawCube() {
-	cube->setSegments(segmentsX, segmentsY);
-    cube->draw();
-}
-
-void MyGLCanvas::drawCylinder() {
-	cylinder->setSegments(segmentsX, segmentsY);
-    cylinder->draw();	
-}
-
-void MyGLCanvas::drawCone() {
-	cone->setSegments(segmentsX, segmentsY);
-    cone->draw();
-}
 
 
 
@@ -288,11 +276,9 @@ void MyGLCanvas::drawObject() {
 
 	if (castRay == true)
 	{
-		// std::cout << mouseX << std::endl;
+	
 		glm::vec3 eyePointP = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
-		// std::cout << eyePointP.x << std::endl;
-		// std::cout << eyePointP.y << std::endl;
-		// std::cout << eyePointP.z << std::endl;
+		
 		glm::vec3 rayV = generateRay(mouseX, mouseY);	
 		glm::vec3 sphereTransV(spherePosition[0], spherePosition[1], spherePosition[2]);
 
@@ -335,11 +321,6 @@ void MyGLCanvas::drawObject() {
 	}
 	glPushMatrix();
 	glRotatef(90, 0, 1, 0);
-	drawShape(objType);
-	// drawCone();
-	// // drawCylinder();
-	// // drawCube();
-	// myObject->drawTexturedSphere(); //TODO:draw shape here
 	
 	glPopMatrix();
 
@@ -348,12 +329,8 @@ void MyGLCanvas::drawObject() {
 }
 
 
-// void MyGLCanvas::drawObject(ObjectNode node, glm::mat4 trans)
-void MyGLCanvas::drawScene()
-{
-	//loop over objects to draw
-	drawObject();
-}
+
+
 
 void MyGLCanvas::updateCamera(int width, int height)
 {
@@ -362,11 +339,10 @@ void MyGLCanvas::updateCamera(int width, int height)
 
 	camera.setScreenSize(width, height);
 
-	// Determine if we are modifying the camera(GL_PROJECITON) matrix(which is our viewing volume)
-	// Otherwise we could modify the object transormations in our world with GL_MODELVIEW
+	
 	glMatrixMode(GL_PROJECTION);
 
-	// Reset the Projection matrix to an identity matrix
+	
 	glLoadIdentity();
 	glm::mat4 projection = camera.getProjectionMatrix();
 	glLoadMatrixf(glm::value_ptr(projection));
@@ -374,7 +350,7 @@ void MyGLCanvas::updateCamera(int width, int height)
 
 int MyGLCanvas::handle(int e)
 {
-	// printf("Event was %s (%d)\n", fl_eventnames[e], e);
+
 	switch (e)
 	{
 	case FL_DRAG:
@@ -382,39 +358,37 @@ int MyGLCanvas::handle(int e)
     mouseY = (int)Fl::event_y();
 
     if (drag == true) {
-        // get new ray from current mouse position
+        
         glm::vec3 eyePoint = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
         glm::vec3 rayDir = generateRay(mouseX, mouseY);
         
-        // use the same t-value along the new ray to get new intersection point
+        
         glm::vec3 new_intersection = eyePoint + (rayDir * oldT);
         
-        // move sphere by same offset to maintain relative position to intersection point
+        
         glm::vec3 offset = oldIsectPoint - oldCenter;
-        spherePosition = new_intersection - offset; //TODO: change to object 
+        spherePosition = new_intersection - offset; 
 
-		//NOTE:step 2: store new location in list
 
     }
     return (1);
 	case FL_MOVE:
 		Fl::belowmouse(this);
-		// printf("mouse move event (%d, %d)\n", (int)Fl::event_x(), (int)Fl::event_y());
+		
 		mouseX = (int)Fl::event_x();
 		mouseY = (int)Fl::event_y();
 
 		break;
 	case FL_PUSH:
 		printf("mouse push\n");
-		//step 1: generate ray from mouse click
+	
 		if ((Fl::event_button() == FL_LEFT_MOUSE) && (castRay == false))
-		{ // left mouse click -- casting Ray
+		{ 
 			castRay = true;
 		}
 		else if ((Fl::event_button() == FL_RIGHT_MOUSE) && (drag == false))
-		{ // right mouse click -- dragging
-			// this code is run when the dragging first starts (i.e. the first frame).
-			// it stores a bunch of values about the sphere's "original" position and information
+		{ 
+		
 			glm::vec3 eyePointP = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
 			glm::vec3 rayV = generateRay(mouseX, mouseY);
 			glm::vec3 sphereTransV(spherePosition[0], spherePosition[1], spherePosition[2]);
@@ -497,35 +471,19 @@ void MyGLCanvas::drawAxis()
 
 void MyGLCanvas::resetScene() {
 	//TODO: reset scene to default 
-    // glm::vec3 eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
-
-    // wireframe = 0;
-    // fill = 1;
-    // normal = 0;
-    // smooth = 0;
-    // segmentsX = segmentsY = 10;
-
-    // shape->setSegments(segmentsX, segmentsY);
-
-    // if (camera != NULL) {
-    //     delete camera;
-    //     camera = NULL;
-    // }
-    // camera = new Camera();
-    // camera->orientLookAt(eyePosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-    // if (parser != NULL) {
-    //     delete parser;
-    //     delete scene;
-    //     parser = NULL;
-    //     scene = NULL;
-    // }
+    objectList.clear();
+    nextObjectId = 0;
+    selectedObjId = -1;
+    redraw();
 }
 
 void MyGLCanvas::setShape(OBJ_TYPE type) {
     objType = type;
+    addObject(type);
     printf("set shape to: %d\n", type);
+    redraw();
 }
+
 void MyGLCanvas::setSegments() {
     shape->setSegments(segmentsX, segmentsY);
 }
@@ -565,7 +523,7 @@ std::vector<double> MyGLCanvas::intersectWithSphere(glm::vec3 eyePointP, glm::ve
 
 std::vector<double> MyGLCanvas::intersectWithCube(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
 {
-  // Transform eye point and ray from world coords to object space
+  
   glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
   glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
 
@@ -657,6 +615,45 @@ std::vector<double> MyGLCanvas::intersectWithCube(glm::vec3 eyePointP, glm::vec3
 
   // Return smallest positive t here
   return results;
+}
+
+
+void MyGLCanvas::addObject(OBJ_TYPE type) {
+  ObjectNode node;
+ 
+  node.id = nextObjectId++;
+  node.translate = glm::vec3(0.0f, 0.0f, 0.0f);
+  node.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+  node.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+  
+
+    switch (type) {
+        case SHAPE_SPHERE:
+            node.primitive = new Sphere();
+            break;
+        case SHAPE_CUBE:
+            node.primitive = new Cube();
+            break;
+        case SHAPE_CYLINDER:
+            node.primitive = new Cylinder();
+            break;
+        case SHAPE_CONE:
+            node.primitive = new Cone();
+            break;
+        default:
+            node.primitive = new Sphere();
+            break;
+    }
+    if (node.primitive != nullptr) {
+      node.primitive->setSegments(segmentsX, segmentsY);
+       objectList.push_back(node);
+    }else{
+      printf("Object ID %d has a null primitive\n", node.id);
+    }
+   
+    
+
+
 }
 
 std::vector<double> MyGLCanvas::intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
@@ -788,11 +785,3 @@ std::vector<double> MyGLCanvas::intersectWithCone(glm::vec3 eyePointP, glm::vec3
 
   return results;
 }
-
-// void MyGLCanvas::setpixel(GLubyte *buf, int x, int y, int r, int g, int b)
-// {
-//   pixelWidth = camera.getScreenWidth();
-//   buf[(y * pixelWidth + x) * 3 + 0] = (GLubyte)r;
-//   buf[(y * pixelWidth + x) * 3 + 1] = (GLubyte)g;
-//   buf[(y * pixelWidth + x) * 3 + 2] = (GLubyte)b;
-// }

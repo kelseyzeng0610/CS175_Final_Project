@@ -14,6 +14,11 @@ public:
 		return SHAPE_CUBE;
 	}
 
+	// void draw(){
+	// 	 glutSolidCube(1.0f); 
+
+	// }
+
 	void draw()
 	{
 		m_points.clear();

@@ -180,11 +180,11 @@ static void radioButtonCB(Fl_Widget* w, void* userdata) {
 	}
 
 static void addShapeCB(Fl_Widget* w, void* userdata){
-	MyAppWindow* window = (MyAppWindow*)userdata;
-	Fl_Window* shapeWindow = new Fl_Window(300, 200, "Select Shape");
-	shapeWindow->user_data((void*)window);
+    MyAppWindow* window = (MyAppWindow*)userdata;
+    Fl_Window* shapeWindow = new Fl_Window(300, 200, "Select Shape");
+    shapeWindow->user_data((void*)window);
 
-	Fl_Box* shapeLabel = new Fl_Box(50, 50, 80, 25, "Shape:");
+    Fl_Box* shapeLabel = new Fl_Box(50, 50, 80, 25, "Shape:");
     shapeLabel->align(FL_ALIGN_RIGHT | FL_ALIGN_INSIDE);
     Fl_Choice* shapeChoice = new Fl_Choice(140, 50, 120, 25, "");
     shapeChoice->add("Cube");
@@ -192,54 +192,46 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
     shapeChoice->add("Cylinder");
     shapeChoice->add("Cone");
     shapeChoice->value(0); // Default selection
-	Fl_Button* okButton = new Fl_Button(60, 150, 80, 30, "OK");
+    Fl_Button* okButton = new Fl_Button(60, 150, 80, 30, "OK");
     Fl_Button* cancelButton = new Fl_Button(160, 150, 80, 30, "Cancel");
 
-	okButton->callback([](Fl_Widget* btn, void* data) {
-		Fl_Window* win = (Fl_Window*)data;
-		MyAppWindow* appWin = (MyAppWindow*)win->user_data();
-		Fl_Choice* choice = (Fl_Choice*)win->child(1);
-		int selected = choice->value();
-		std::string plyFile;
+    okButton->callback([](Fl_Widget* btn, void* data) {
+        Fl_Window* win = (Fl_Window*)data;
+        MyAppWindow* appWin = (MyAppWindow*)win->user_data();
+        Fl_Choice* choice = (Fl_Choice*)win->child(1);
+        int selected = choice->value();
         switch (selected) {
-            case 0: //cube
-				printf("select 0\n");
-                // plyFile = "./data/cube.ply";
-				// appWin -> canvas -> drawCube();
-				appWin -> canvas -> setShape(SHAPE_CUBE);
+            case 0: // Cube
+                printf("Selected Cube\n");
+				appWin->canvas->setShape(SHAPE_CUBE);
                 break;
-            case 1: //sphere
-				appWin -> canvas -> drawSphere();
-				appWin -> canvas -> setShape(SHAPE_SPHERE);
-                // plyFile = "./data/sphere.ply";
+            case 1: // Sphere
+                printf("Selected Sphere\n");
+                appWin->canvas->setShape(SHAPE_SPHERE);
                 break;
-            case 2: //cylinder
-                // plyFile = "./data/cylinder.ply";
-				appWin -> canvas -> drawCylinder();
-				appWin -> canvas -> setShape(SHAPE_CYLINDER);
+            case 2: // Cylinder
+                printf("Selected Cylinder\n");
+                appWin->canvas->setShape(SHAPE_CYLINDER);
                 break;
-            case 3: //cone
-                // plyFile = "./data/cone.ply";
-				appWin -> canvas -> drawCone();
-				appWin -> canvas -> setShape(SHAPE_CONE);
+            case 3: // Cone
+                printf("Selected Cone\n");
+                appWin->canvas->setShape(SHAPE_CONE);
                 break;
-            default: //cube
-                // plyFile = "./data/cube.ply";
-				appWin -> canvas -> drawCube();
-				appWin -> canvas -> setShape(SHAPE_CUBE);
+         
         }
-		//  appWin->canvas->addPLY(plyFile);
-		//  appWin->canvas->redraw();
-		 win->hide(); 
-		  }, shapeWindow);
-	cancelButton->callback([](Fl_Widget* btn, void* data) {
+        win->hide(); 
+    }, shapeWindow);
+
+    cancelButton->callback([](Fl_Widget* btn, void* data) {
         Fl_Window* win = (Fl_Window*)data;
         win->hide(); // Close the shape selection window
     }, shapeWindow);
-	shapeWindow->end();
+    shapeWindow->end();
     shapeWindow->set_modal(); // Make it a modal dialog
     shapeWindow->show();
 }
+
+
 
 static void addShape() {
 	//TODO: load the shape
@@ -467,6 +459,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 
 /**************************************** main() ********************/
 int main(int argc, char **argv) {
+	glutInit(&argc, argv);
 	win = new MyAppWindow(900, 600, "Dragging Object");
 	win->resizable(win);
 	Fl::add_idle(MyAppWindow::idleCB);
