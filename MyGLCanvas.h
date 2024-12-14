@@ -34,6 +34,9 @@ struct ObjectNode {
    glm::vec3 rotation;
    glm::vec3 translate;
    glm::vec3 oldCenter; 
+   int red;
+   int green;
+   int blue;
 };
 
 

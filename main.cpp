@@ -36,6 +36,9 @@ public:
     Fl_Slider *rotXSlider;
     Fl_Slider *rotYSlider;
     Fl_Slider *rotZSlider;
+    Fl_Slider *CamerarotXSlider;
+    Fl_Slider *CamerarotYSlider;
+    Fl_Slider *CamerarotZSlider;
     Fl_Slider *scaleSlider;
 	MyGLCanvas* canvas;
 
@@ -116,20 +119,56 @@ private:
 
 	static void redCB(Fl_Widget* w, void* userdata) {
         int value = ((Fl_Slider*)w)->value();
-        printf("value: %d\n", value);
-        // TODO: add red color property
+		int selectedId = win->canvas->selectedObjId;
+
+		if (selectedId != -1) {
+			auto it = std::find_if(
+				win->canvas->objectList.begin(),
+				win->canvas->objectList.end(),
+				[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+
+			if (it != win->canvas->objectList.end()) {
+				// Update the red values based on the slider
+				it->red = win->rSlider->value();
+				win->canvas->redraw();
+			}
+		}
     }
 
     static void greenCB(Fl_Widget* w, void* userdata) {
         int value = ((Fl_Slider*)w)->value();
-        printf("value: %d\n", value);
-		// TODO: add green color property
+		int selectedId = win->canvas->selectedObjId;
+
+		if (selectedId != -1) {
+			auto it = std::find_if(
+				win->canvas->objectList.begin(),
+				win->canvas->objectList.end(),
+				[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+
+			if (it != win->canvas->objectList.end()) {
+				// Update the green values based on the slider
+				it->green = win->gSlider->value();
+				win->canvas->redraw();
+			}
+		}
     }
 
     static void blueCB(Fl_Widget* w, void* userdata) {
         int value = ((Fl_Slider*)w)->value();
-        printf("value: %d\n", value);
-		// TODO: add blue color property
+		int selectedId = win->canvas->selectedObjId;
+
+		if (selectedId != -1) {
+			auto it = std::find_if(
+				win->canvas->objectList.begin(),
+				win->canvas->objectList.end(),
+				[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+
+			if (it != win->canvas->objectList.end()) {
+				// Update the blue values based on the slider
+				it->blue = win->bSlider->value();
+				win->canvas->redraw();
+			}
+		}
     }
 
 	static void sizeCB(Fl_Widget* w, void* userdata) {
@@ -275,9 +314,9 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
 
 
 
-static void addShape() {
-	//TODO: load the shape
-}
+// static void addShape() {
+// 	//TODO: load the shape
+// }
 
 static void createXML() {
 	//TODO: export to xml
@@ -377,12 +416,14 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	segmentsYSlider->step(1);
 	segmentsYSlider->value(canvas->segmentsY);
 	segmentsYSlider->callback(segmentsCB, (void*)(&(canvas->segmentsY)));
+
     Fl_Box* redBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Red");
 	rSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	rSlider->align(FL_ALIGN_TOP);
 	rSlider->type(FL_HOR_SLIDER);
 	rSlider->bounds(0, 255);
 	rSlider->step(1);
+	rSlider->value(255); // Default value set to 255
 	rSlider->callback(redCB);
 
     Fl_Box* greenBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Green");
@@ -391,6 +432,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	gSlider->type(FL_HOR_SLIDER);
 	gSlider->bounds(0, 255);
 	gSlider->step(1);
+	gSlider->value(255); // Default value set to 255
 	gSlider->callback(greenCB);
 
     Fl_Box* blueBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Blue");
@@ -399,37 +441,38 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	bSlider->type(FL_HOR_SLIDER);
 	bSlider->bounds(0, 255);
 	bSlider->step(1);
+	bSlider->value(255); // Default value set to 255
 	bSlider->callback(blueCB);
 
-    Fl_Box* sliderBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Size");
-    sizeSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	sizeSlider->align(FL_ALIGN_TOP);
-	sizeSlider->type(FL_HOR_SLIDER);
-	sizeSlider->bounds(1, 5);
-	sizeSlider->step(1);
-	sizeSlider->callback(sizeCB);
+    // Fl_Box* sliderBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Size");
+    // sizeSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	// sizeSlider->align(FL_ALIGN_TOP);
+	// sizeSlider->type(FL_HOR_SLIDER);
+	// sizeSlider->bounds(1, 5);
+	// sizeSlider->step(1);
+	// sizeSlider->callback(sizeCB);
 
-	drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Add Shape");
-	drawButton->callback((Fl_Callback*)addShape);
+	// drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Add Shape");
+	// drawButton->callback((Fl_Callback*)addShape);
 
 	drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Create XML");
 	drawButton->callback((Fl_Callback*)createXML);
     radioPack->end();
 
 	pack->end();
-	// slider for camera
+	// second column slider
 	Fl_Pack* packCol2 = new Fl_Pack(w() - 155, 30, 150, h(), "");
 	packCol2->box(FL_DOWN_FRAME);
 	packCol2->type(Fl_Pack::VERTICAL);
 	packCol2->spacing(30);
 	packCol2->begin();
 
-	Fl_Pack *cameraPack = new Fl_Pack(w() - 100, 30, 100, h(), "Camera");
-	cameraPack->box(FL_DOWN_FRAME);
-	cameraPack->labelfont(1);
-	cameraPack->type(Fl_Pack::VERTICAL);
-	cameraPack->spacing(0);
-	cameraPack->begin();
+	Fl_Pack *objectPack = new Fl_Pack(w() - 100, 30, 100, h(), "Orientation");
+	objectPack->box(FL_DOWN_FRAME);
+	objectPack->labelfont(1);
+	objectPack->type(Fl_Pack::VERTICAL);
+	objectPack->spacing(0);
+	objectPack->begin();
 
 	Fl_Box *rotXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateX");
 	rotXSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
@@ -469,8 +512,56 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	scaleSlider->value(canvas->scale);
 	// scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
 	scaleSlider->callback(scaleSliderCB, (void*)this);
-	cameraPack->end();
-	packCol2->end();
+	objectPack->end();
+	// packCol2->end();
+
+	Fl_Pack *cameraPack = new Fl_Pack(w() - 100, 30, 100, h(), "Camera");
+	cameraPack->box(FL_DOWN_FRAME);
+	cameraPack->labelfont(1);
+	cameraPack->type(Fl_Pack::VERTICAL);
+	cameraPack->spacing(0);
+	cameraPack->begin();
+
+	Fl_Box *CamerarotXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera X");
+	CamerarotXSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	CamerarotXSlider->align(FL_ALIGN_TOP);
+	CamerarotXSlider->type(FL_HOR_SLIDER);
+	CamerarotXSlider->bounds(-359, 359);
+	CamerarotXSlider->step(1);
+	CamerarotXSlider->value(canvas->rotVec.x);
+	// rotXSlider->callback(rotationSliderCB,(void *)(&(canvas->rotVec.x)));
+	rotXSlider->callback(rotationSliderCB, (void*)this);
+
+	Fl_Box *CamerarotYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera Y");
+	CamerarotYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	CamerarotYSlider->align(FL_ALIGN_TOP);
+	CamerarotYSlider->type(FL_HOR_SLIDER);
+	CamerarotYSlider->bounds(-359, 359);
+	CamerarotYSlider->step(1);
+	CamerarotYSlider->value(canvas->rotVec.y);
+	// rotYSlider->callback(rotationSliderCB, (void *)(&(canvas->rotVec.y)));
+	CamerarotYSlider->callback(rotationSliderCB, (void*)this);
+
+	Fl_Box *CamerarotZTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera Z");
+	CamerarotZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	CamerarotZSlider->align(FL_ALIGN_TOP);
+	CamerarotZSlider->type(FL_HOR_SLIDER);
+	CamerarotZSlider->bounds(-359, 359);
+	CamerarotZSlider->step(1);
+	CamerarotZSlider->value(canvas->rotVec.z);
+	// rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
+	CamerarotZSlider->callback(rotationSliderCB, (void*)this);
+
+	// Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale");
+	// scaleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	// scaleSlider->align(FL_ALIGN_TOP);
+	// scaleSlider->type(FL_HOR_SLIDER);
+	// scaleSlider->bounds(0.1, 2);
+	// scaleSlider->value(canvas->scale);
+	// // scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
+	// scaleSlider->callback(scaleSliderCB, (void*)this);
+	// cameraPack->end();
+	// packCol2->end();
 	// pack -> end();
 
 	end();

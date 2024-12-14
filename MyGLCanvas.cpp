@@ -248,13 +248,19 @@ void MyGLCanvas::drawObjects(){
         glRotatef(obj.rotation.z, 0.0f, 0.0f, 1.0f);
         glScalef(obj.scale.x, obj.scale.y, obj.scale.z);
 
-    glColor3f(1.0f, 1.0f, 1.0f); 
+        float red = obj.red / 255.0f;
+        float green = obj.green / 255.0f;
+        float blue = obj.blue / 255.0f;
+    // glColor3f(1.0f, 1.0f, 1.0f); 
  if (wireframe) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glColor3f(1.0f, 1.0f, 1.0f);
         } else {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glColor3f(1.0f, 1.0f, 1.0f);
+            printf("red: %f\n", red);
+            printf("green: %f\n", green);
+            printf("blue: %f\n", blue);
+            glColor3f(red, green, blue);
         }
 
      if (obj.primitive != nullptr) {
@@ -621,6 +627,9 @@ void MyGLCanvas::addObject(OBJ_TYPE type) {
   node.scale = glm::vec3(1.0f, 1.0f, 1.0f);
   node.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
   node.oldCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+  node.red = 255;
+  node.green = 255;
+  node.blue = 255;
   
 
     switch (type) {
