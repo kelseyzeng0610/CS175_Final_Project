@@ -155,6 +155,47 @@ private:
 		*((int*)userdata) = value;
 		win->canvas->setSegments();
 	}
+
+	static void rotationSliderCB(Fl_Widget* w, void* userdata) {
+    int selectedId = win->canvas->selectedObjId;
+
+
+    if (selectedId != -1) {
+        auto it = std::find_if(
+            win->canvas->objectList.begin(),
+            win->canvas->objectList.end(),
+            [selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+
+        if (it != win->canvas->objectList.end()) {
+          
+            it->rotation.x = win->rotXSlider->value();
+            it->rotation.y = win->rotYSlider->value();
+            it->rotation.z = win->rotZSlider->value();
+
+            win->canvas->redraw();
+        }
+    }
+}
+
+static void scaleSliderCB(Fl_Widget* w, void* userdata) {
+    int selectedId = win->canvas->selectedObjId;
+
+    if (selectedId != -1) {
+        auto it = std::find_if(
+            win->canvas->objectList.begin(),
+            win->canvas->objectList.end(),
+            [selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+
+        if (it != win->canvas->objectList.end()) {
+            // Update the scale values based on the slider
+            it->scale.x = win->scaleSlider->value();
+            it->scale.y = win->scaleSlider->value();
+            it->scale.z = win->scaleSlider->value();
+
+            win->canvas->redraw();
+        }
+    }
+}
 };
 
 //TODO: DRAW SHAPES
@@ -313,32 +354,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 
 	// options for drawing primitive
 	Fl_Pack* radioPack = new Fl_Pack(w() - 100, 30, 100, h(), "Shape");
-	// radioPack->box(FL_DOWN_FRAME);
-	// radioPack->labelfont(1);
-	// radioPack->type(Fl_Pack::VERTICAL);
-	// radioPack->spacing(0);
-	// radioPack->begin();
-	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cube");
-	// tmpButton->type(102);
-	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	// tmpButton->value(1);
-	// tmpButton->callback((Fl_Callback*)radioButtonCB);
-	// }
-	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cylinder");
-	// tmpButton->type(102);
-	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	// tmpButton->callback((Fl_Callback*)radioButtonCB);
-	// }
-	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Cone");
-	// tmpButton->type(102);
-	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	// tmpButton->callback((Fl_Callback*)radioButtonCB);
-	// }
-	// { Fl_Round_Button* tmpButton = new Fl_Round_Button(0, 0, pack->w() - 20, 20, "Sphere");
-	// tmpButton->type(102);
-	// tmpButton->down_box(FL_ROUND_DOWN_BOX);
-	// tmpButton->callback((Fl_Callback*)radioButtonCB);
-	// }
+	
 	addShapeButton = new Fl_Button(0, 0, pack->w() - 20, 25, "Select Shape");
     addShapeButton->callback(addShapeCB, (void*)this);	// primitive properties
 	//slider for controlling number of segments in X
@@ -422,7 +438,8 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	rotXSlider->bounds(-359, 359);
 	rotXSlider->step(1);
 	rotXSlider->value(canvas->rotVec.x);
-	rotXSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.x)));
+	// rotXSlider->callback(rotationSliderCB,(void *)(&(canvas->rotVec.x)));
+	rotXSlider->callback(rotationSliderCB, (void*)this);
 
 	Fl_Box *rotYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateY");
 	rotYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
@@ -431,7 +448,8 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	rotYSlider->bounds(-359, 359);
 	rotYSlider->step(1);
 	rotYSlider->value(canvas->rotVec.y);
-	rotYSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.y)));
+	// rotYSlider->callback(rotationSliderCB, (void *)(&(canvas->rotVec.y)));
+	rotYSlider->callback(rotationSliderCB, (void*)this);
 
 	Fl_Box *rotZTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateZ");
 	rotZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
@@ -440,7 +458,8 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	rotZSlider->bounds(-359, 359);
 	rotZSlider->step(1);
 	rotZSlider->value(canvas->rotVec.z);
-	rotZSlider->callback(sliderFloatCB, (void *)(&(canvas->rotVec.z)));
+	// rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
+	rotZSlider->callback(rotationSliderCB, (void*)this);
 
 	Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale");
 	scaleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
@@ -448,8 +467,8 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	scaleSlider->type(FL_HOR_SLIDER);
 	scaleSlider->bounds(0.1, 2);
 	scaleSlider->value(canvas->scale);
-	scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
-
+	// scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
+	scaleSlider->callback(scaleSliderCB, (void*)this);
 	cameraPack->end();
 	packCol2->end();
 	// pack -> end();

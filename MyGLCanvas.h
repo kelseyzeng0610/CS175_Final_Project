@@ -72,6 +72,8 @@ public:
 	Cylinder* cylinder;
 	Shape* shape;
 	int segmentsX, segmentsY;
+	int selectedObjId;
+	int nextObjectId;
 
 	// used in flattened list to make update values
 	std::vector<ObjectNode> objectList;
@@ -108,8 +110,7 @@ private:
 
 	void drawAxis();
 	void drawGrid();
-	int selectedObjId;
-	int nextObjectId;
+	
 
 	
 	void resize(int x, int y, int w, int h);
