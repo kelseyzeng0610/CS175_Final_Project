@@ -3,8 +3,6 @@
 
 int Shape::m_segmentsX;
 int Shape::m_segmentsY;
-int MyGLCanvas::nextObjectId = 0;
-int MyGLCanvas::selectedObjId = -1;
 
 
 
@@ -77,23 +75,6 @@ MyGLCanvas::~MyGLCanvas()
 
 }
 
-// loop over objectList and select the one that is hit by the ray
-// returns the closest object and its index
-// std::pair<ObjectNode, int> MyGLCanvas::closestObject(glm::vec3 rayOriginPoint, int mouseX, int mouseY){
-// 	std::pair<ObjectNode, int> closest_obj_info;
-
-// 	glm::vec3 intersection_obj = glm::vec3(0);
-// 	glm::vec3 intersection = glm::vec3(0);
-// 	glm::vec3 normal = glm::vec3(0);
-
-// 	ObjectNode* closest_obj = nullptr;
-// 	double closest_t = INFINITY;
-
-// 	ObjectNode small;
-
- 
-// 	return closest_obj_info;
-// }
 
 glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
 {
@@ -128,47 +109,71 @@ glm::vec3 MyGLCanvas::getIsectPointWorldCoord(glm::vec3 eye, glm::vec3 ray, floa
 	return eye + ray * t;
 }
 
-double MyGLCanvas::intersect(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
+
+double MyGLCanvas::intersect(ObjectNode& obj, glm::vec3 eyePointP, glm::vec3 rayV)
 {
-	// transform eye point and ray into object space
-	glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 0.0f);
-	glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
+    double closest_t = INFINITY;
 
-	// transform sphere center
-	glm::vec4 sphereCenterO = transformMatrix * glm::vec4(spherePosition, 0.0f);
+    // Correctly generate the transformation matrix based on the object's current state
+    glm::mat4 transformMatrix = glm::translate(glm::mat4(1.0f), obj.translate) * 
+                                glm::rotate(glm::mat4(1.0f), glm::radians(obj.rotation.x), glm::vec3(1.0f, 0.0f, 0.0f)) *
+                                glm::rotate(glm::mat4(1.0f), glm::radians(obj.rotation.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                                glm::rotate(glm::mat4(1.0f), glm::radians(obj.rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
+                                glm::scale(glm::mat4(1.0f), obj.scale);
 
-	// adjust eye point relative to sphere center
-	glm::vec4 relativeEyePoint = eyePointPO - sphereCenterO;
+    glm::mat4 invTransformMatrix = glm::inverse(transformMatrix);
 
-	double A = glm::dot(rayVO, rayVO);
-	double B = 2.0 * glm::dot(rayVO, relativeEyePoint);
-	double C = glm::dot(relativeEyePoint, relativeEyePoint) - 0.25;
+    // Transform ray and eye point into object space
+    glm::vec3 invEyePoint = glm::vec3(invTransformMatrix * glm::vec4(eyePointP, 1.0f));
+    glm::vec3 invRay = glm::vec3(invTransformMatrix * glm::vec4(rayV, 0.0f));
 
-	double discriminant = pow(B, 2) - 4.0 * A * C;
+    glm::vec3 p = glm::vec3(invEyePoint);
+    glm::vec3 d = glm::normalize(glm::vec3(invRay));
 
-	// no intersection
-	if (discriminant < 0)
-		return -1.0;
+    std::vector<double> results;
 
-	double t1 = (-B - sqrt(discriminant)) / (2.0 * A);
-	double t2 = (-B + sqrt(discriminant)) / (2.0 * A);
+    // Intersection test based on primitive type
+    switch (obj.primitive->getType()) {
+        case SHAPE_CUBE:
+            results = intersectWithCube(p, d, glm::mat4(1.0f));  // Already in object space
+            break;
+        case SHAPE_SPHERE:
+            results = intersectWithSphere(p, d, glm::mat4(1.0f)); // Already in object space
+            break;
+        case SHAPE_CYLINDER:
+            results = intersectWithCylinder(p, d, glm::mat4(1.0f)); // Already in object space
+            break;
+        case SHAPE_CONE:
+            results = intersectWithCone(p, d, glm::mat4(1.0f)); // Already in object space
+            break;
+        default:
+            break;
+    }
 
-	// return nearest intersection
-	if (t1 > 0 && t2 > 0)
-	{
-		return std::min(t1, t2);
-	}
-	else if (t1 > 0)
-	{
-		return t1;
-	}
-	else if (t2 > 0)
-	{
-		return t2;
-	}
+    ObjectNode* closest_obj = nullptr;
 
-	return -1.0;
+    for (double t : results) {
+        if (t > 0) {
+            glm::vec3 obj_intersection = p + float(t) * d;
+            glm::vec4 world_intersection = transformMatrix * glm::vec4(obj_intersection, 1.0f);
+            double dist = glm::length(glm::vec3(world_intersection) - eyePointP);
+
+            if (dist < closest_t) {
+                closest_t = dist;
+                closest_obj = &obj;
+            }
+        }
+    }
+
+    if (closest_obj != nullptr) {
+        return closest_t;
+    } else {
+        return -1.0;
+    }
 }
+
+
+
 
 void MyGLCanvas::draw()
 {
@@ -233,15 +238,16 @@ void MyGLCanvas::draw()
 void MyGLCanvas::drawObjects(){
    
 
-  for(ObjectNode obj: objectList){
+  for(ObjectNode&obj: objectList){
     // printf("Drawing Object ID %d\n", obj.id);
 
     glPushMatrix();
-    glScalef(obj.scale.x, obj.scale.y, obj.scale.z);
-    glRotatef(obj.rotation.x, 1.0f, 0.0f, 0.0f);
-    glRotatef(obj.rotation.y, 0.0f, 1.0f, 0.0f);
-    glRotatef(obj.rotation.z, 0.0f, 0.0f, 1.0f);
-    glTranslatef(obj.translate.x, obj.translate.y, obj.translate.z);
+        glTranslatef(obj.translate.x, obj.translate.y, obj.translate.z);
+        glRotatef(obj.rotation.x, 1.0f, 0.0f, 0.0f);
+        glRotatef(obj.rotation.y, 0.0f, 1.0f, 0.0f);
+        glRotatef(obj.rotation.z, 0.0f, 0.0f, 1.0f);
+        glScalef(obj.scale.x, obj.scale.y, obj.scale.z);
+
     glColor3f(1.0f, 1.0f, 1.0f); 
  if (wireframe) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -263,145 +269,29 @@ void MyGLCanvas::drawObjects(){
 }
 
 
-int MyGLCanvas::selectObject(int mouseX, int mouseY){
+int MyGLCanvas::selectObject(int mouseX, int mouseY)
+{
+    glm::vec3 eyePoint = camera.getEyePoint();
+    glm::vec3 rayDir = generateRay(mouseX, mouseY);
 
-  printf("Selecting Object\n");
-  glm::vec3 eyePoint = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
-  glm::vec3 ray = generateRay(mouseX, mouseY);
+    const ObjectNode* closestObj = nullptr;
+    float closestT = INFINITY;
 
-  ObjectNode* closest_obj = nullptr;
-
-  int selectedObjId = -1;
-  float closest_t = INFINITY;
-  std::vector<double> results;
-  for(ObjectNode obj: objectList){
-    results.clear();
-    glm::vec3 objScale = obj.scale;
-    glm::vec3 objTranslate = obj.translate;
-    glm::vec3 objRotation = obj.rotation;
-
-    glm::mat4 transformMatrix = glm::translate(glm::mat4(1.0f), objTranslate) * 
-                                glm::rotate(glm::mat4(1.0f), glm::radians(objRotation.x), glm::vec3(1.0f, 0.0f, 0.0f)) *
-                                glm::rotate(glm::mat4(1.0f), glm::radians(objRotation.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
-                                glm::rotate(glm::mat4(1.0f), glm::radians(objRotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
-                                glm::scale(glm::mat4(1.0f), objScale);
-    glm::mat4 invTransformMatrix = glm::inverse(transformMatrix); 
-
-    glm::vec3 invRay = glm::vec3(invTransformMatrix * glm::vec4(ray, 0.0f));
-    glm::vec3 invEyePoint = glm::vec3(invTransformMatrix * glm::vec4(eyePoint, 1.0f));
-    glm::vec3 p = glm::vec3(invEyePoint);
-    glm::vec3 d = glm::normalize(glm::vec3(invRay));
-
-
-    switch(obj.primitive->getType()){
-      case SHAPE_CUBE:
-        results = intersectWithCube(invEyePoint, invRay, invTransformMatrix);
-        break;
-      case SHAPE_SPHERE:
-        results = intersectWithSphere(invEyePoint, invRay, invTransformMatrix);
-        break;
-      case SHAPE_CYLINDER:
-       results = intersectWithCylinder(invEyePoint, invRay, invTransformMatrix);
-        break;
-      case SHAPE_CONE:
-         results= intersectWithCone(invEyePoint, invRay, invTransformMatrix);
-        break;
-      default:
-        obj.primitive = nullptr;
-        break;
+    for (auto& obj : objectList) {
+        double t = intersect(obj, eyePoint, rayDir);  
+        if (t > 0 && t < closestT) {
+            closestT = t;
+            closestObj = &obj;
+        }
     }
-    for (double t : results) {
-                      if (t > 0) {
-                          glm::vec3 obj_intersection = p + float(t) * d;
-                          glm::vec4 world_intersection = transformMatrix * glm::vec4(obj_intersection, 1.0f);
-                          double dist = glm::length(glm::vec3(world_intersection) - eyePoint);
 
-                          if (dist < closest_t) {
-                              closest_t = dist;
-                              closest_obj = &obj;
-                          }
-                      }
-                  }
+    if (closestObj) {
+        selectedObjId = closestObj->id;  
+        return selectedObjId;
+    }
 
-
-  }
-  if (closest_obj != nullptr) {
-    selectedObjId = closest_obj->id;
-    return selectedObjId;
-    printf("Selected Object ID: %d\n", selectedObjId);
-  } else {
-    printf("No object selected\n");
+    selectedObjId = -1; // No object selected
     return -1;
-  }
-
-
-
-
-}
-
-
-
-void MyGLCanvas::drawObject() {
-	//add object properties
-
-	//cast ray onto object
-	glMatrixMode(GL_MODELVIEW);
-	// Set the mode so we are modifying our objects.
-	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
-	glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
-
-	if (castRay == true)
-	{
-	
-		glm::vec3 eyePointP = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
-		
-		glm::vec3 rayV = generateRay(mouseX, mouseY);	
-		glm::vec3 sphereTransV(spherePosition[0], spherePosition[1], spherePosition[2]);
-
-		float t = intersect(eyePointP, rayV, glm::translate(glm::mat4(1.0), sphereTransV));
-		glm::vec3 isectPointWorldCoord = getIsectPointWorldCoord(eyePointP, rayV, t);
-
-		if (t > 0)
-		{
-			glColor3f(1, 0, 0);
-			glPushMatrix();
-			glTranslated(spherePosition[0], spherePosition[1], spherePosition[2]);
-			glutWireCube(1.0f);
-			glPopMatrix();
-			glPushMatrix();
-			glTranslatef(isectPointWorldCoord[0], isectPointWorldCoord[1], isectPointWorldCoord[2]);
-			glutSolidSphere(0.05f, 10, 10);
-			glPopMatrix();
-			printf("hit!\n");
-		}
-		else
-		{
-			printf("miss!\n");
-		}
-	}
-
-	glPushMatrix();
-
-	// move the sphere to the designated position
-	glTranslated(spherePosition[0], spherePosition[1], spherePosition[2]);
-
-	glDisable(GL_POLYGON_OFFSET_FILL);
-	glColor3f(1.0, 1.0, 1.0);
-	if (wireframe)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	}
-	else
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-	glPushMatrix();
-	glRotatef(90, 0, 1, 0);
-	
-	glPopMatrix();
-
-	glPopMatrix();
-
 }
 
 
@@ -424,107 +314,132 @@ void MyGLCanvas::updateCamera(int width, int height)
 	glLoadMatrixf(glm::value_ptr(projection));
 }
 
+
 int MyGLCanvas::handle(int e)
 {
-  printf("Event happened: %d\n", e);
-	switch (e)
-	{
-	case FL_DRAG:
+    switch (e)
+    {
+    case FL_PUSH:
+        mouseX = (int)Fl::event_x();
+        mouseY = (int)Fl::event_y();
+
+        if (Fl::event_button() == FL_LEFT_MOUSE) {
+            // Left mouse button: Select object
+            castRay = true;
+            selectedObjId = selectObject(mouseX, mouseY);
+
+            if (selectedObjId != -1) {
+                printf("Object selected: ID %d\n", selectedObjId);
+            } else {
+                printf("No object selected.\n");
+            }
+        } else if ((Fl::event_button() == FL_RIGHT_MOUSE) && !drag) {
+    // Find the selected object by ID
+    auto it = std::find_if(objectList.begin(), objectList.end(),
+        [this](const ObjectNode& obj) { return obj.id == selectedObjId; });
+
+    if (it != objectList.end()) {
+        // Generate ray and compute intersection
+        glm::vec3 eyePoint = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
+        glm::vec3 rayDir = generateRay(mouseX, mouseY);
+
+        double t = intersect(*it, eyePoint, rayDir);
+        if (t > 0) {
+            // Initialize drag state
+            drag = true;
+            oldCenter = it->translate; // Store the current center position
+            oldT = t;                 // Store the intersection parameter t
+            oldIsectPoint = getIsectPointWorldCoord(eyePoint, rayDir, t); // Intersection point
+
+            printf("Dragging started. Object ID: %d, Initial Intersection: (%f, %f, %f)\n",
+                   it->id, oldIsectPoint.x, oldIsectPoint.y, oldIsectPoint.z);
+        }
+    }
+}
+
+        return 1;
+   
+    case FL_DRAG:
     mouseX = (int)Fl::event_x();
     mouseY = (int)Fl::event_y();
 
-    if (drag == true) {
-        
-        glm::vec3 eyePoint = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
-        glm::vec3 rayDir = generateRay(mouseX, mouseY);
-        
-        
-        glm::vec3 new_intersection = eyePoint + (rayDir * oldT);
-        
-        
-        glm::vec3 offset = oldIsectPoint - oldCenter;
-        spherePosition = new_intersection - offset; 
+    if (drag && selectedObjId != -1) {
+        auto it = std::find_if(objectList.begin(), objectList.end(),
+            [this](const ObjectNode& obj) { return obj.id == selectedObjId; });
 
+        if (it != objectList.end()) {
+            glm::vec3 eyePoint = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
+            glm::vec3 rayDir = generateRay(mouseX, mouseY);
 
+            glm::vec3 newIntersection = getIsectPointWorldCoord(eyePoint, rayDir, oldT);
+            glm::vec3 offset = oldIsectPoint - oldCenter;
+
+            // Update object's translate property
+            it->translate = newIntersection - offset;
+
+            // Update dragging reference points
+            oldCenter = it->translate;
+            oldIsectPoint = newIntersection;
+
+            // Redraw to reflect the changes
+            redraw();
+        }
     }
-    return (1);
-	case FL_MOVE:
-		Fl::belowmouse(this);
-		
-		mouseX = (int)Fl::event_x();
-		mouseY = (int)Fl::event_y();
+    return 1;
 
-		break;
-	case FL_PUSH:
-		printf("mouse push\n");
-	
-		if ((Fl::event_button() == FL_LEFT_MOUSE) && (castRay == false))
-		{ 
-			castRay = true;
-      int selected = selectObject(mouseX, mouseY);
-      printf("Selected Object ID: %d\n", selected);
-      return 1;
-		}
-		else if ((Fl::event_button() == FL_RIGHT_MOUSE) && (drag == false))
-		{ 
-      
-      // move the selected object 
-			glm::vec3 eyePointP = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
-			glm::vec3 rayV = generateRay(mouseX, mouseY);
-			glm::vec3 sphereTransV(spherePosition[0], spherePosition[1], spherePosition[2]);
-			float t = intersect(eyePointP, rayV, glm::translate(glm::mat4(1.0), sphereTransV));
-			glm::vec3 isectPointWorldCoord = getIsectPointWorldCoord(eyePointP, rayV, t);
 
-			// this only activates if the mouse intersects with the sphere to enable dragging
-			if (t > 0)
-			{
-				drag = true;
-				printf("drag is true\n");
-				oldCenter = spherePosition;
-				oldIsectPoint = isectPointWorldCoord;
-				oldT = t;
-			}
-		}
-		return (1);
-	case FL_RELEASE:
-		printf("mouse release\n");
-		if (Fl::event_button() == FL_LEFT_MOUSE)
-		{
-			castRay = false;
-		}
-		else if (Fl::event_button() == FL_RIGHT_MOUSE)
-		{
-			drag = false;
-		}
-		return (1);
-	case FL_KEYUP:
-		printf("keyboard event: key pressed: %c\n", Fl::event_key());
-		switch (Fl::event_key())
-		{
-		case 'w':
-			eyePosition.y += 0.05f;
-			break;
-		case 'a':
-			eyePosition.x += 0.05f;
-			break;
-		case 's':
-			eyePosition.y -= 0.05f;
-			break;
-		case 'd':
-			eyePosition.x -= 0.05f;
-			break;
-		}
-		updateCamera(w(), h());
-		break;
-	case FL_MOUSEWHEEL:
-		printf("mousewheel: dx: %d, dy: %d\n", Fl::event_dx(), Fl::event_dy());
-		eyePosition.z += Fl::event_dy() * -0.05f;
-		updateCamera(w(), h());
-		break;
-	}
 
-	  return Fl_Gl_Window::handle(e);
+
+    case FL_RELEASE:
+        if (Fl::event_button() == FL_LEFT_MOUSE) {
+            castRay = false;
+        } else if (Fl::event_button() == FL_RIGHT_MOUSE) {
+            if (drag) {
+                // Reset drag state
+                drag = false;
+                oldT = 0.0f;
+                oldIsectPoint = glm::vec3(0.0f);
+                oldCenter = glm::vec3(0.0f);
+
+                printf("Dragging finished for Object ID: %d\n", selectedObjId);
+            }
+        }
+        return 1;
+
+    case FL_MOVE:
+        mouseX = (int)Fl::event_x();
+        mouseY = (int)Fl::event_y();
+        break;
+
+    case FL_KEYUP:
+        printf("Keyboard event: key pressed: %c\n", Fl::event_key());
+        switch (Fl::event_key()) {
+        case 'w':
+            eyePosition.y += 0.05f;
+            break;
+        case 'a':
+            eyePosition.x += 0.05f;
+            break;
+        case 's':
+            eyePosition.y -= 0.05f;
+            break;
+        case 'd':
+            eyePosition.x -= 0.05f;
+            break;
+        }
+        updateCamera(w(), h());
+        break;
+
+    case FL_MOUSEWHEEL:
+        printf("Mouse wheel: dx: %d, dy: %d\n", Fl::event_dx(), Fl::event_dy());
+        eyePosition.z += Fl::event_dy() * -0.05f;
+        updateCamera(w(), h());
+        break;
+    }
+
+    return Fl_Gl_Window::handle(e);
 }
+
 
 void MyGLCanvas::resize(int x, int y, int w, int h)
 {
@@ -705,6 +620,7 @@ void MyGLCanvas::addObject(OBJ_TYPE type) {
   node.translate = glm::vec3(0.0f, 0.0f, 0.0f);
   node.scale = glm::vec3(1.0f, 1.0f, 1.0f);
   node.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+  node.oldCenter = glm::vec3(0.0f, 0.0f, 0.0f);
   
 
     switch (type) {

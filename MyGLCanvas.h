@@ -43,8 +43,7 @@ public:
 
 	// Length of our spline (i.e how many points do we randomly generate)
 
-	static int selectedObjId;
-	static int nextObjectId;
+
 	glm::vec3 eyePosition;
 	glm::vec3 rotVec;
 	glm::vec3 lookatPoint;
@@ -103,12 +102,14 @@ private:
 	glm::vec3 generateRay(int pixelX, int pixelY);
 	glm::vec3 getEyePoint(int pixelX, int pixelY, int screenWidth, int screenHeight);
 	glm::vec3 getIsectPointWorldCoord(glm::vec3 eye, glm::vec3 ray, float t);
-	double intersect(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	double intersect(ObjectNode& obj, glm::vec3 eyePointP, glm::vec3 rayV);
 
 	void draw();
 
 	void drawAxis();
 	void drawGrid();
+	int selectedObjId;
+	int nextObjectId;
 
 	
 	void resize(int x, int y, int w, int h);

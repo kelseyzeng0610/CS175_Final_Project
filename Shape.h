@@ -27,7 +27,16 @@ class Shape
 public:
 	static int m_segmentsX;
 	static int m_segmentsY;
-	
+	virtual void setTransform(glm::vec3 translate, glm::vec3 rotate, glm::vec3 scale) {
+        glm::mat4 T = glm::translate(glm::mat4(1.0f), translate);
+        glm::mat4 Rx = glm::rotate(glm::mat4(1.0f), rotate.x, glm::vec3(1,0,0));
+        glm::mat4 Ry = glm::rotate(glm::mat4(1.0f), rotate.y, glm::vec3(0,1,0));
+        glm::mat4 Rz = glm::rotate(glm::mat4(1.0f), rotate.z, glm::vec3(0,0,1));
+        glm::mat4 S = glm::scale(glm::mat4(1.0f), scale);
+        
+        // Final transform = T * Rz * Ry * Rx * S
+        transformMatrix = T * Rz * Ry * Rx * S;
+    }
 
 	// Points List
 	static std::vector<std::array<float, 3>> m_points;
@@ -53,6 +62,8 @@ public:
 	virtual void drawNormal() {};
 
 protected:
+
+	glm::mat4 transformMatrix;
 	void normalizeNormal(float x, float y, float z)
 	{
 		normalizeNormal(glm::vec3(x, y, z));
