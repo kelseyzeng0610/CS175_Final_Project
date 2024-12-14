@@ -62,8 +62,21 @@ MyGLCanvas::~MyGLCanvas()
 
 // loop over objectList and select the one that is hit by the ray
 // returns the closest object and its index
-std::pair<ObjectNode, int> MyGLCanvas::selectedObject(glm::vec3 rayOriginPoint, int mouseX, int mouseY){
-	std::pair<ObjectNode, int> closest_obj;
+std::pair<ObjectNode, int> MyGLCanvas::closestObject(glm::vec3 rayOriginPoint, int mouseX, int mouseY){
+	std::pair<ObjectNode, int> closest_obj_info;
+
+	glm::vec3 intersection_obj = glm::vec3(0);
+	glm::vec3 intersection = glm::vec3(0);
+	glm::vec3 normal = glm::vec3(0);
+
+	ObjectNode* closest_obj = nullptr;
+	double closest_t = INFINITY;
+
+	ObjectNode small;
+	// for (ObjectNode my_p : objectList) {
+	// }
+ 
+	return closest_obj_info;
 }
 
 void MyGLCanvas::addPLY(const std::string& plyFile) {
@@ -155,52 +168,12 @@ void MyGLCanvas::drawCone() {
     cone->draw();
 }
 
-// void MyGLCanvas::drawScene() {
-// void MyGLCanvas::drawScene() {
-//     // cout << "start of drawScene" << endl;
-//     // if (parser == NULL) {
-//     //     return;
-//     // }
 
-//     glPushMatrix();
 
-//     //disable all the lights, and then enable each one...
-//     // for (int i = 0; i < NUM_OPENGL_LIGHTS; i++) {
-//     //     glDisable(GL_LIGHT0 + i);
-//     // }
+void MyGLCanvas::drawObject() {
+	//add object properties
 
-//     glColor3f(1, 1, 1);
-//     glEnable(GL_POLYGON_OFFSET_FILL);
-//     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-//     int i = 0;
-//     glm::mat4 my_mat = glm::mat4(1.0);
-//     for (ObjectNode node : objectList) {
-//         // glm::mat4 transform = node.transform;
-//         // glm::mat4 transformInverse = node.transformInverse;
-//         // glMultMatrixf(glm::value_ptr(transform));
-//         // // applyMaterial(node.primitive->material); 
-//         // vector<int> vect{1, 
-//         // (int)(node.shape->material.cDiffuse.channels[0] * 255.),
-//         // (int)(node.shape->material.cDiffuse.channels[1] * 255.),
-//         // (int)(node.shape->material.cDiffuse.channels[2] * 255.)};
-//         // pair<OBJ_TYPE,vector<int>> p(node.shape->type, vect);
-//         // my_mat *= transform;
-//         // drawObject(node, transform);
-//         i++;
-//         // renderShape(node.primitive->type);
-//         // glMultMatrixf(glm::value_ptr(transformInverse));        
-//     }
-
-//     // glDisable(GL_LIGHTING);
-
-//     glPopMatrix();
-//     // cout << "end of drawScene" << endl;
-// }
-
-// void MyGLCanvas::drawObject(ObjectNode node, glm::mat4 trans)
-void MyGLCanvas::drawScene()
-{
+	//cast ray onto object
 	glMatrixMode(GL_MODELVIEW);
 	// Set the mode so we are modifying our objects.
 	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
@@ -265,6 +238,15 @@ void MyGLCanvas::drawScene()
 	glPopMatrix();
 
 	glPopMatrix();
+
+}
+
+
+// void MyGLCanvas::drawObject(ObjectNode node, glm::mat4 trans)
+void MyGLCanvas::drawScene()
+{
+	//loop over objects to draw
+	drawObject();
 }
 
 
@@ -315,7 +297,7 @@ int MyGLCanvas::handle(int e) {
         spherePosition = new_intersection - offset; //TODO: change to object 
 
 		//NOTE:step 2: store new location in list
-		
+
     }
     return (1);
 	case FL_MOVE:

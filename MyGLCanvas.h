@@ -72,7 +72,7 @@ public:
 	int segmentsX, segmentsY;
 
 	// used in flattened list to make update values
-	// vector<ObjectNode> objectList;
+	std::vector<ObjectNode> objectList;
 	// glm::vec3 curr_pos;
 	// int curr_idx;
 
@@ -124,7 +124,9 @@ private:
 	// void storeObjects(SceneNode* node, glm::mat4 parent_transform);
 	// void setpixel(GLubyte* buf, int x, int y, int r, int g, int b);
 	// void getClosestT();
-	std::pair<ObjectNode, int> selectedObject(glm::vec3 eye_pnt, int mouseX, int mouseY);
+	std::pair<ObjectNode, int> closestObject(glm::vec3 eye_pnt, int mouseX, int mouseY);
+	void objectIterator();
+	void drawObject();
 
 	bool firstTime;
 };
