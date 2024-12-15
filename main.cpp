@@ -40,6 +40,13 @@ public:
     Fl_Slider *CamerarotYSlider;
     Fl_Slider *CamerarotZSlider;
     Fl_Slider *scaleSlider;
+
+	Fl_Slider *scaleXSlider;
+	Fl_Slider *scaleYSlider;
+	Fl_Slider *scaleZSlider;
+	Fl_Check_Button* uniformScaleToggle;
+
+
     Fl_Slider *angleSlider;
 	MyGLCanvas* canvas;
 
@@ -61,35 +68,11 @@ public:
 
 	static void idleCB(void* userdata) {
 		win->canvas->redraw();
-		// updateGUIValues();
+		
 	}
 
-	void updateGUIValues() {
-	// 	TODO: reset values to default
-    //     wireButton->value(canvas->wireframe);
-    //     fillButton->value(canvas->fill);
-    //     smoothButton->value(canvas->smooth);
-    //     normalButton->value(canvas->normal);
-
-    //     segmentsXSlider->value(canvas->segmentsX);
-    //     segmentsYSlider->value(canvas->segmentsY);
-
-    //     rotUSlider->value(canvas->camera->rotU);
-    //     rotVSlider->value(canvas->camera->rotV);
-    //     rotWSlider->value(canvas->camera->rotW);
-
-    //     eyeXSlider->value(canvas->camera->getEyePoint().x);
-    //     eyeYSlider->value(canvas->camera->getEyePoint().y);
-    //     eyeZSlider->value(canvas->camera->getEyePoint().z);
-
-    //     lookXSlider->value(canvas->camera->getLookVector().x);
-    //     lookYSlider->value(canvas->camera->getLookVector().y);
-    //     lookZSlider->value(canvas->camera->getLookVector().z);
-
-    //     nearSlider->value(canvas->camera->getNearPlane());
-    //     farSlider->value(canvas->camera->getFarPlane());
-    //     angleSlider->value(canvas->camera->getViewAngle());
-    }
+	
+	
 
 	void updateSelectedObject() {
 		int selectedId = canvas->selectedObjId;
@@ -108,9 +91,11 @@ public:
 				rotYSlider->value(it->rotation.y);
 				rotZSlider->value(it->rotation.z);
 
-				scaleSlider->value(it->scale.x);
-				scaleSlider->value(it->scale.y);
-				scaleSlider->value(it->scale.z);
+				
+				scaleXSlider->value(it->scale.x);
+                scaleYSlider->value(it->scale.y);
+                scaleZSlider->value(it->scale.z);
+                scaleSlider->value(it->scale.x);
 
 				// Redraw them to show the updated value
 				rSlider->redraw();
@@ -122,11 +107,32 @@ public:
 				rotZSlider->redraw();
 
 				scaleSlider->redraw();
+				scaleXSlider->redraw();
+                scaleYSlider->redraw();
+                scaleZSlider->redraw();
+                
 			}
 		}
 	}
 
 private:
+
+
+static void uniformScaleToggleCB(Fl_Widget *w, void *userdata) {
+        // Handle toggle for uniform scaling
+        if (((Fl_Check_Button *)w)->value() == 1) {
+            win->scaleXSlider->deactivate();
+            win->scaleYSlider->deactivate();
+            win->scaleZSlider->deactivate();
+            win->scaleSlider->activate();
+        } else {
+            win->scaleXSlider->activate();
+            win->scaleYSlider->activate();
+            win->scaleZSlider->activate();
+            win->scaleSlider->deactivate();
+        }
+    }
+
 	// Someone changed one of the sliders
 	static void toggleCB(Fl_Widget* w, void* userdata) {
 		int value = ((Fl_Button*)w)->value();
@@ -149,7 +155,7 @@ private:
 	static void resetSceneCB(Fl_Widget* w, void* data) {
         cout << "Reest Scene" << endl;
         win->canvas->resetScene();
-        win->updateGUIValues();
+        // win->updateGUIValues();
         win->canvas->redraw();
     }
 
@@ -251,25 +257,35 @@ private:
     }
 }
 
-	static void scaleSliderCB(Fl_Widget* w, void* userdata) {
-		int selectedId = win->canvas->selectedObjId;
 
-		if (selectedId != -1) {
-			auto it = std::find_if(
-				win->canvas->objectList.begin(),
-				win->canvas->objectList.end(),
-				[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+	 static void scaleSliderCB(Fl_Widget *w, void *userdata) {
+        int selectedId = win->canvas->selectedObjId;
 
-			if (it != win->canvas->objectList.end()) {
-				// Update the scale values based on the slider
-				it->scale.x = win->scaleSlider->value();
-				it->scale.y = win->scaleSlider->value();
-				it->scale.z = win->scaleSlider->value();
+        if (selectedId != -1) {
+            auto it = std::find_if(
+                win->canvas->objectList.begin(),
+                win->canvas->objectList.end(),
+                [selectedId](const ObjectNode &obj) { return obj.id == selectedId; });
 
-				win->canvas->redraw();
-			}
-		}
-	}
+            if (it != win->canvas->objectList.end()) {
+                if (w == win->scaleSlider) {
+                    // Uniform scaling
+                    float uniformScale = win->scaleSlider->value();
+                    it->scale.x = uniformScale;
+                    it->scale.y = uniformScale;
+                    it->scale.z = uniformScale;
+                } else if (w == win->scaleXSlider) {
+                    it->scale.x = win->scaleXSlider->value();
+                } else if (w == win->scaleYSlider) {
+                    it->scale.y = win->scaleYSlider->value();
+                } else if (w == win->scaleZSlider) {
+                    it->scale.z = win->scaleZSlider->value();
+                }
+
+                win->canvas->redraw();
+            }
+        }
+    }
 	
     static void cameraRotateCB(Fl_Widget* w, void* userdata) {
         win->canvas->camera.setRotUVW(win->CamerarotXSlider->value(), win->CamerarotYSlider->value(), win->CamerarotZSlider->value());
@@ -495,16 +511,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	bSlider->value(255); // Default value set to 255
 	bSlider->callback(blueCB);
 
-    // Fl_Box* sliderBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Size");
-    // sizeSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	// sizeSlider->align(FL_ALIGN_TOP);
-	// sizeSlider->type(FL_HOR_SLIDER);
-	// sizeSlider->bounds(1, 5);
-	// sizeSlider->step(1);
-	// sizeSlider->callback(sizeCB);
-
-	// drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Add Shape");
-	// drawButton->callback((Fl_Callback*)addShape);
+   
 
 	drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Create XML");
 	drawButton->callback((Fl_Callback*)createXML);
@@ -555,7 +562,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	// rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
 	rotZSlider->callback(rotationSliderCB, (void*)this);
 
-	Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale");
+	Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "UniformScale");
 	scaleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	scaleSlider->align(FL_ALIGN_TOP);
 	scaleSlider->type(FL_HOR_SLIDER);
@@ -564,8 +571,45 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	// scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
 	scaleSlider->callback(scaleSliderCB, (void*)this);
 	objectPack->end();
+
+
+	uniformScaleToggle = new Fl_Check_Button(0, 0, pack->w() - 10,10 , "Enable Uniform Scale");
+    uniformScaleToggle->callback(uniformScaleToggleCB, (void *)this);
+
+	Fl_Box *scaleXBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale X");
+    scaleXSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    scaleXSlider->align(FL_ALIGN_TOP);
+    scaleXSlider->type(FL_HOR_SLIDER);
+    scaleXSlider->bounds(0.1, 5);
+    scaleXSlider->value(1.0);
+    scaleXSlider->callback(scaleSliderCB, (void *)this);
+
+    Fl_Box *scaleYBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale Y");
+    scaleYSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    scaleYSlider->align(FL_ALIGN_TOP);
+    scaleYSlider->type(FL_HOR_SLIDER);
+    scaleYSlider->bounds(0.1, 5);
+    scaleYSlider->value(1.0);
+    scaleYSlider->callback(scaleSliderCB, (void *)this);
+
+    Fl_Box *scaleZBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale Z");
+    scaleZSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    scaleZSlider->align(FL_ALIGN_TOP);
+    scaleZSlider->type(FL_HOR_SLIDER);
+    scaleZSlider->bounds(0.1, 5);
+    scaleZSlider->value(1.0);
+    scaleZSlider->callback(scaleSliderCB, (void *)this);
+	
 	// pack->end();
 
+
+
+
+  	scaleSlider->deactivate();
+    scaleXSlider->activate();
+    scaleYSlider->activate();
+    scaleZSlider->activate();
+	uniformScaleToggle->value(0);
 	Fl_Pack *cameraPack = new Fl_Pack(w() - 100, 30, 100, h(), "Camera");
 	cameraPack->box(FL_DOWN_FRAME);
 	cameraPack->labelfont(1);
