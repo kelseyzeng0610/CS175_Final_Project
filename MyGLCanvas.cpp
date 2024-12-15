@@ -16,9 +16,9 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 {
 	mode(FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
-	eyePosition = glm::vec3(1.0f, 1.0f, 1.0f);
-	lookatPoint = glm::vec3(1.0f, 1.0f, 1.0f);
-	rotVec = glm::vec3(0.0f, 0.0f, 0.0f);
+	// eyePosition = glm::vec3(0.0f, 0.0f, 5.0f);
+	// lookatPoint = glm::vec3(0.0f, 0.0f, 0.0f);
+	// rotVec = glm::vec3(0.0f, 0.0f, 0.0f);
   nextObjectId = 0;
   selectedObjId = -1;
 
@@ -42,13 +42,25 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	camera.setNearPlane(clipNear);
 	camera.setFarPlane(clipFar);
 	// Set the mode so we are modifying our objects.
-	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+	// camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
   // camera.orientLookVec(glm::vec3(0.0f, 0.0f, 5.0f), 
   //                        glm::vec3(0.0f, 0.0f, 0.0f), 
   //                        glm::vec3(0.0f, 1.0f, 0.0f));
+
+  glm::vec3 eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
+glm::vec3 focusPoint  = glm::vec3(0.0f, 0.0f, 0.0f);
+
+// Compute the look vector from the eye to the focus
+glm::vec3 lookVec = glm::normalize(focusPoint - eyePosition);
+glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+
+camera.orientLookVec(eyePosition, lookVec, upVector);
 	isectOnly = 1;
 	segmentsX = segmentsY = 10;
 	
+
+  //  addObject(SHAPE_CUBE);
+  	// camera.orientLookVec(eyePosition, glm::vec3(-1, -1, -5), glm::vec3(0, 1, 0));
 }
 
 void MyGLCanvas::setupCamera() {
@@ -449,8 +461,7 @@ int MyGLCanvas::handle(int e)
         if (updated) {
             // Re-orient the camera with the new eyePosition
             // Assume we keep the same look direction (e.g. (0,0,-1)) and up direction (0,1,0)
-            camera.orientLookVec(eyePosition, camera.getLookVector(), camera.getUpVector());
-            
+            camera.orientLookAt(eyePosition, glm::vec3(0,0,0), glm::vec3(0,1,0));            
             // Update projection if needed and redraw
             updateCamera(w(), h());
             redraw();
