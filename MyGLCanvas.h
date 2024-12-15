@@ -56,6 +56,7 @@ public:
 	int  viewAngle;
 	float clipNear;
 	float clipFar;
+	Camera camera;
 	float camera_near;
 	float camera_far;
 
@@ -120,7 +121,6 @@ private:
 	void updateCamera(int width, int height);
 
 	SceneObject* myObject;
-	Camera camera;
 	bool castRay;
 	bool drag;
 	glm::vec3 oldCenter;
@@ -140,9 +140,7 @@ private:
 	// void storeObjects(SceneNode* node, glm::mat4 parent_transform);
 	// void setpixel(GLubyte* buf, int x, int y, int r, int g, int b);
 	// void getClosestT();
-	std::pair<ObjectNode, int> closestObject(glm::vec3 eye_pnt, int mouseX, int mouseY);
-	void objectIterator();
-	void drawObject();
+	// void renderEnv();
 
 };
 

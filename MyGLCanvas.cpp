@@ -5,7 +5,6 @@ int Shape::m_segmentsX;
 int Shape::m_segmentsY;
 
 
-
 int Shape::lastIndex;
 std::vector<std::array<float, 3>> Shape::m_points;
 std::unordered_map<int, glm::vec3> Shape::m_normals;
@@ -43,15 +42,16 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	camera.setNearPlane(clipNear);
 	camera.setFarPlane(clipFar);
 	// Set the mode so we are modifying our objects.
-	// camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
-  camera.orientLookVec(glm::vec3(0.0f, 0.0f, 3.0f), 
-                         glm::vec3(0.0f, 0.0f, 0.0f), 
-                         glm::vec3(0.0f, 1.0f, 0.0f));
+	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+  // camera.orientLookVec(glm::vec3(0.0f, 0.0f, 5.0f), 
+  //                        glm::vec3(0.0f, 0.0f, 0.0f), 
+  //                        glm::vec3(0.0f, 1.0f, 0.0f));
 	isectOnly = 1;
 	segmentsX = segmentsY = 10;
 	
 
   //  addObject(SHAPE_CUBE);
+  	// camera.orientLookVec(eyePosition, glm::vec3(-1, -1, -5), glm::vec3(0, 1, 0));
 }
 
 void MyGLCanvas::setupCamera() {
@@ -172,9 +172,6 @@ double MyGLCanvas::intersect(ObjectNode& obj, glm::vec3 eyePointP, glm::vec3 ray
     }
 }
 
-
-
-
 void MyGLCanvas::draw()
 {
   
@@ -215,22 +212,18 @@ void MyGLCanvas::draw()
 		glEnable(GL_DEPTH_TEST);
 		glPolygonOffset(1, 1);
 	}
-
-	// Clear the buffer of colors in each bit plane.
-	// bit plane - A set of bits that are on or off (Think of a black and white image)
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
+  printf("%f\n", camera.rotU);
+  printf("%f\n", camera.rotV);
+  printf("%f\n", camera.rotW);
   glMatrixMode(GL_MODELVIEW);
-	// Se
-	camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
-	glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
+
+    // Now load the camera's modelview matrix
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
 	drawObjects();
   drawAxis();
 
   glFlush();
-    
-	
 }
 
 
@@ -252,14 +245,14 @@ void MyGLCanvas::drawObjects(){
         float green = obj.green / 255.0f;
         float blue = obj.blue / 255.0f;
     // glColor3f(1.0f, 1.0f, 1.0f); 
- if (wireframe) {
+        if (wireframe) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glColor3f(1.0f, 1.0f, 1.0f);
         } else {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            printf("red: %f\n", red);
-            printf("green: %f\n", green);
-            printf("blue: %f\n", blue);
+            // printf("red: %f\n", red);
+            // printf("green: %f\n", green);
+            // printf("blue: %f\n", blue);
             glColor3f(red, green, blue);
         }
 

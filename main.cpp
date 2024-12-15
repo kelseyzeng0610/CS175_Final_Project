@@ -245,7 +245,6 @@ private:
             it->rotation.x = win->rotXSlider->value();
             it->rotation.y = win->rotYSlider->value();
             it->rotation.z = win->rotZSlider->value();
-
             win->canvas->redraw();
         }
     }
@@ -270,6 +269,16 @@ private:
 			}
 		}
 	}
+	
+    static void cameraRotateCB(Fl_Widget* w, void* userdata) {
+        win->canvas->camera.setRotUVW(win->CamerarotXSlider->value(), win->CamerarotYSlider->value(), win->CamerarotZSlider->value());
+        // glm::vec3 lookV = win->canvas->camera.getLookVector();
+        // lookV = glm::normalize(lookV);
+        // win->lookXSlider->value(lookV.x);
+        // win->lookYSlider->value(lookV.y);
+        // win->lookZSlider->value(lookV.z);
+		win->canvas->redraw();
+    }
 };
 
 //TODO: DRAW SHAPES
@@ -548,7 +557,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	// scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
 	scaleSlider->callback(scaleSliderCB, (void*)this);
 	objectPack->end();
-	// packCol2->end();
+	// pack->end();
 
 	Fl_Pack *cameraPack = new Fl_Pack(w() - 100, 30, 100, h(), "Camera");
 	cameraPack->box(FL_DOWN_FRAME);
@@ -557,35 +566,36 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	cameraPack->spacing(0);
 	cameraPack->begin();
 
-	Fl_Box *CamerarotXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera X");
+	Fl_Box *CamerarotXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera U");
 	CamerarotXSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	CamerarotXSlider->align(FL_ALIGN_TOP);
 	CamerarotXSlider->type(FL_HOR_SLIDER);
 	CamerarotXSlider->bounds(-359, 359);
 	CamerarotXSlider->step(1);
-	CamerarotXSlider->value(canvas->rotVec.x);
+	CamerarotXSlider->value(canvas->camera.rotU);
 	// rotXSlider->callback(rotationSliderCB,(void *)(&(canvas->rotVec.x)));
-	rotXSlider->callback(rotationSliderCB, (void*)this);
+	CamerarotXSlider->callback(cameraRotateCB, (void*)this);
 
-	Fl_Box *CamerarotYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera Y");
+	Fl_Box *CamerarotYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera V");
 	CamerarotYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	CamerarotYSlider->align(FL_ALIGN_TOP);
 	CamerarotYSlider->type(FL_HOR_SLIDER);
 	CamerarotYSlider->bounds(-359, 359);
 	CamerarotYSlider->step(1);
-	CamerarotYSlider->value(canvas->rotVec.y);
+	CamerarotYSlider->value(canvas->camera.rotV);
 	// rotYSlider->callback(rotationSliderCB, (void *)(&(canvas->rotVec.y)));
-	CamerarotYSlider->callback(rotationSliderCB, (void*)this);
+	CamerarotYSlider->callback(cameraRotateCB, (void*)this);
 
-	Fl_Box *CamerarotZTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera Z");
+	Fl_Box *CamerarotZTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera W");
 	CamerarotZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	CamerarotZSlider->align(FL_ALIGN_TOP);
 	CamerarotZSlider->type(FL_HOR_SLIDER);
 	CamerarotZSlider->bounds(-359, 359);
 	CamerarotZSlider->step(1);
-	CamerarotZSlider->value(canvas->rotVec.z);
+	CamerarotZSlider->value(canvas->camera.rotW);
 	// rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
-	CamerarotZSlider->callback(rotationSliderCB, (void*)this);
+	CamerarotZSlider->callback(cameraRotateCB, (void*)this);
+	
 
 	// Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale");
 	// scaleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
@@ -595,9 +605,9 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	// scaleSlider->value(canvas->scale);
 	// // scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
 	// scaleSlider->callback(scaleSliderCB, (void*)this);
-	// cameraPack->end();
-	// packCol2->end();
-	// pack -> end();
+	cameraPack->end();
+	packCol2->end();
+	pack -> end();
 
 	end();
 }
