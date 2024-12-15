@@ -212,14 +212,21 @@ void MyGLCanvas::draw()
 		glEnable(GL_DEPTH_TEST);
 		glPolygonOffset(1, 1);
 	}
-  printf("%f\n", camera.rotU);
-  printf("%f\n", camera.rotV);
-  printf("%f\n", camera.rotW);
-  glMatrixMode(GL_MODELVIEW);
+  // printf("%f\n", camera.rotU);
+  // printf("%f\n", camera.rotV);
+  // printf("%f\n", camera.rotW);
 
-    // Now load the camera's modelview matrix
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
+	// camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)); //for mouse scroll
+  glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
+
+  // After changing view angle, get new projection
+  glm::mat4 projection = camera.getProjectionMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(glm::value_ptr(projection));
+
+  // Then load the modelview from the camera
+  glMatrixMode(GL_MODELVIEW);
+  glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
 	drawObjects();
   drawAxis();
 

@@ -40,6 +40,7 @@ public:
     Fl_Slider *CamerarotYSlider;
     Fl_Slider *CamerarotZSlider;
     Fl_Slider *scaleSlider;
+    Fl_Slider *angleSlider;
 	MyGLCanvas* canvas;
 
 	Fl_Slider* rSlider;
@@ -277,6 +278,12 @@ private:
         // win->lookXSlider->value(lookV.x);
         // win->lookYSlider->value(lookV.y);
         // win->lookZSlider->value(lookV.z);
+		win->canvas->redraw();
+    }
+
+    static void angleSliderCB(Fl_Widget* w, void* userdata) {
+		float angle = win->angleSlider->value();        
+		win->canvas->camera.setViewAngle(angle);
 		win->canvas->redraw();
     }
 };
@@ -597,14 +604,14 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	CamerarotZSlider->callback(cameraRotateCB, (void*)this);
 	
 
-	// Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale");
-	// scaleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	// scaleSlider->align(FL_ALIGN_TOP);
-	// scaleSlider->type(FL_HOR_SLIDER);
-	// scaleSlider->bounds(0.1, 2);
-	// scaleSlider->value(canvas->scale);
-	// // scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
-	// scaleSlider->callback(scaleSliderCB, (void*)this);
+	Fl_Box *viewAngelTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "View Angel");
+	angleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	angleSlider->align(FL_ALIGN_TOP);
+	angleSlider->type(FL_HOR_SLIDER);
+	angleSlider->bounds(1, 179);
+	angleSlider->value(canvas->camera.viewAngle);
+	// scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
+	angleSlider->callback(angleSliderCB, (void*)this);
 	cameraPack->end();
 	packCol2->end();
 	pack -> end();
