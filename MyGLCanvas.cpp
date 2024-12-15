@@ -16,8 +16,8 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 {
 	mode(FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
-	eyePosition = glm::vec3(0.0f, 0.0f, 5.0f);
-	lookatPoint = glm::vec3(0.0f, 0.0f, 0.0f);
+	eyePosition = glm::vec3(1.0f, 1.0f, 1.0f);
+	lookatPoint = glm::vec3(1.0f, 1.0f, 1.0f);
 	rotVec = glm::vec3(0.0f, 0.0f, 0.0f);
   nextObjectId = 0;
   selectedObjId = -1;
@@ -49,9 +49,6 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	isectOnly = 1;
 	segmentsX = segmentsY = 10;
 	
-
-  //  addObject(SHAPE_CUBE);
-  	// camera.orientLookVec(eyePosition, glm::vec3(-1, -1, -5), glm::vec3(0, 1, 0));
 }
 
 void MyGLCanvas::setupCamera() {
@@ -217,7 +214,7 @@ void MyGLCanvas::draw()
   // printf("%f\n", camera.rotW);
 
 	// camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)); //for mouse scroll
-  glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
+  // glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
 
   // After changing view angle, get new projection
   glm::mat4 projection = camera.getProjectionMatrix();
@@ -422,29 +419,44 @@ int MyGLCanvas::handle(int e)
         }
         return 1;
 
-    case FL_MOVE:
-        mouseX = (int)Fl::event_x();
-        mouseY = (int)Fl::event_y();
-        break;
 
-    case FL_KEYUP:
+    case FL_KEYUP: {
         printf("Keyboard event: key pressed: %c\n", Fl::event_key());
-        switch (Fl::event_key()) {
-        case 'w':
-            eyePosition.y += 0.05f;
-            break;
-        case 'a':
-            eyePosition.x += 0.05f;
-            break;
-        case 's':
-            eyePosition.y -= 0.05f;
-            break;
-        case 'd':
-            eyePosition.x -= 0.05f;
-            break;
+        int key = Fl::event_key();
+        float step = 0.1f; // adjust how fast the eyePosition changes
+        bool updated = false;
+
+        if (key == 'w') { // Move forward along the camera's look direction
+            eyePosition += glm::normalize(camera.getLookVector()) * step;
+            updated = true;
+        } 
+        else if (key == 's') { // Move backward
+            eyePosition -= glm::normalize(camera.getLookVector()) * step;
+            updated = true;
+        } 
+        else if (key == 'a') { // Move left (perpendicular to look vector and up vector)
+            // Compute a left vector from cross products
+            glm::vec3 leftVec = glm::normalize(glm::cross(camera.getUpVector(), camera.getLookVector()));
+            eyePosition += leftVec * step;
+            updated = true;
+        } 
+        else if (key == 'd') { // Move right
+            glm::vec3 rightVec = glm::normalize(glm::cross(camera.getLookVector(), camera.getUpVector()));
+            eyePosition += rightVec * step;
+            updated = true;
         }
-        updateCamera(w(), h());
+
+        if (updated) {
+            // Re-orient the camera with the new eyePosition
+            // Assume we keep the same look direction (e.g. (0,0,-1)) and up direction (0,1,0)
+            camera.orientLookVec(eyePosition, camera.getLookVector(), camera.getUpVector());
+            
+            // Update projection if needed and redraw
+            updateCamera(w(), h());
+            redraw();
+        }
         break;
+    }
 
     case FL_MOUSEWHEEL:
         printf("Mouse wheel: dx: %d, dy: %d\n", Fl::event_dx(), Fl::event_dy());
