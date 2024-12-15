@@ -51,6 +51,8 @@ public:
 	glm::vec3 eyePosition;
 	glm::vec3 rotVec;
 	glm::vec3 lookatPoint;
+	// glm::vec3 lookVector;
+	// glm::vec3 upVector;
 
 	int wireframe;
 	int  viewAngle;

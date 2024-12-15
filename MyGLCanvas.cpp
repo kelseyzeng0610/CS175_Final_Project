@@ -47,14 +47,18 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
   //                        glm::vec3(0.0f, 0.0f, 0.0f), 
   //                        glm::vec3(0.0f, 1.0f, 0.0f));
 
-  glm::vec3 eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
-glm::vec3 focusPoint  = glm::vec3(0.0f, 0.0f, 0.0f);
+//   glm::vec3 eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
+// glm::vec3 focusPoint  = glm::vec3(0.0f, 0.0f, 0.0f);
 
-// Compute the look vector from the eye to the focus
-glm::vec3 lookVec = glm::normalize(focusPoint - eyePosition);
-glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+// // Compute the look vector from the eye to the focus
+// glm::vec3 lookVec = glm::normalize(focusPoint - eyePosition);
+// glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
 
-camera.orientLookVec(eyePosition, lookVec, upVector);
+  // camera.orientLookVec(eyePosition, lookVec, upVector);
+  eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
+  glm::vec3 lookVector = glm::normalize(glm::vec3(-2.0f, -2.0f, -2.0f)); // from (2,2,2) to (0,0,0)
+  glm::vec3 upVector = glm::vec3(0,1,0);
+  camera.orientLookVec(eyePosition, lookVector, upVector);
 	isectOnly = 1;
 	segmentsX = segmentsY = 10;
 	
@@ -460,8 +464,8 @@ int MyGLCanvas::handle(int e)
 
         if (updated) {
             // Re-orient the camera with the new eyePosition
-            // Assume we keep the same look direction (e.g. (0,0,-1)) and up direction (0,1,0)
-            camera.orientLookAt(eyePosition, glm::vec3(0,0,0), glm::vec3(0,1,0));            
+            // TODO: this will always set the direct back to origion
+            camera.orientLookAt(eyePosition, camera.getLookVector(), camera.getUpVector());            
             // Update projection if needed and redraw
             updateCamera(w(), h());
             redraw();
