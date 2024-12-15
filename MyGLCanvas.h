@@ -43,6 +43,7 @@ struct ObjectNode {
 
 class MyGLCanvas : public Fl_Gl_Window {
 public:
+    std::function<void()> onSelectionChanged; // callback for when selection changes
 
 	// Length of our spline (i.e how many points do we randomly generate)
 
@@ -80,7 +81,6 @@ public:
 
 	// used in flattened list to make update values
 	std::vector<ObjectNode> objectList;
-	
 
 
 MyGLCanvas(int x, int y, int w, int h, const char *l = 0);

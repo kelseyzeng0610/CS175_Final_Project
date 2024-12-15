@@ -90,6 +90,41 @@ public:
     //     angleSlider->value(canvas->camera->getViewAngle());
     }
 
+	void updateSelectedObject() {
+		int selectedId = canvas->selectedObjId;
+		if (selectedId != -1) {
+			auto it = std::find_if(canvas->objectList.begin(),
+								canvas->objectList.end(),
+								[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+
+			if (it != canvas->objectList.end()) {
+				// Update the sliders to reflect the selected object's color
+				rSlider->value(it->red);
+				gSlider->value(it->green);
+				bSlider->value(it->blue);
+
+				rotXSlider->value(it->rotation.x);
+				rotYSlider->value(it->rotation.y);
+				rotZSlider->value(it->rotation.z);
+
+				scaleSlider->value(it->scale.x);
+				scaleSlider->value(it->scale.y);
+				scaleSlider->value(it->scale.z);
+
+				// Redraw them to show the updated value
+				rSlider->redraw();
+				gSlider->redraw();
+				bSlider->redraw();
+
+				rotXSlider->redraw();
+				rotYSlider->redraw();
+				rotZSlider->redraw();
+
+				scaleSlider->redraw();
+			}
+		}
+	}
+
 private:
 	// Someone changed one of the sliders
 	static void toggleCB(Fl_Widget* w, void* userdata) {
@@ -216,25 +251,25 @@ private:
     }
 }
 
-static void scaleSliderCB(Fl_Widget* w, void* userdata) {
-    int selectedId = win->canvas->selectedObjId;
+	static void scaleSliderCB(Fl_Widget* w, void* userdata) {
+		int selectedId = win->canvas->selectedObjId;
 
-    if (selectedId != -1) {
-        auto it = std::find_if(
-            win->canvas->objectList.begin(),
-            win->canvas->objectList.end(),
-            [selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+		if (selectedId != -1) {
+			auto it = std::find_if(
+				win->canvas->objectList.begin(),
+				win->canvas->objectList.end(),
+				[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
 
-        if (it != win->canvas->objectList.end()) {
-            // Update the scale values based on the slider
-            it->scale.x = win->scaleSlider->value();
-            it->scale.y = win->scaleSlider->value();
-            it->scale.z = win->scaleSlider->value();
+			if (it != win->canvas->objectList.end()) {
+				// Update the scale values based on the slider
+				it->scale.x = win->scaleSlider->value();
+				it->scale.y = win->scaleSlider->value();
+				it->scale.z = win->scaleSlider->value();
 
-            win->canvas->redraw();
-        }
-    }
-}
+				win->canvas->redraw();
+			}
+		}
+	}
 };
 
 //TODO: DRAW SHAPES
@@ -573,6 +608,10 @@ int main(int argc, char **argv) {
 	glutInit(&argc, argv);
 	win = new MyAppWindow(900, 600, "Dragging Object");
 	win->resizable(win);
+    // Set the callback to reflect the current value of selected object
+	win->canvas->onSelectionChanged = []() {
+		win->updateSelectedObject();
+	};
 	Fl::add_idle(MyAppWindow::idleCB);
 	win->show();
 	return(Fl::run());

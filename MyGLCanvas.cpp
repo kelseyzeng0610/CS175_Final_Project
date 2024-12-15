@@ -293,10 +293,20 @@ int MyGLCanvas::selectObject(int mouseX, int mouseY)
 
     if (closestObj) {
         selectedObjId = closestObj->id;  
+        if (onSelectionChanged) {
+            onSelectionChanged(); // Notify the main window that a new object is selected
+        }
         return selectedObjId;
     }
 
-    selectedObjId = -1; // No object selected
+    // If no object is selected
+    // If you want to notify on deselection as well:
+    if (selectedObjId != -1) {
+        selectedObjId = -1;  // No object selected
+        if (onSelectionChanged) {
+            onSelectionChanged(); // Notify that now no object is selected
+        }
+    }
     return -1;
 }
 
