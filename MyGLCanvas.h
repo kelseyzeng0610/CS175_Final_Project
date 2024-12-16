@@ -25,20 +25,17 @@
 #define COASTER_SPEED 0.0001
 
 
-
 struct ObjectNode {
-	int id;
-//    Shape *primitive;
-   Shape* primitive;
-   glm::vec3 scale;
-   glm::vec3 rotation;
-   glm::vec3 translate;
-   glm::vec3 oldCenter; 
-   int red;
-   int green;
-   int blue;
-};
+    int id;
+    glm::vec3 translate, scale, rotation;
+    int red, green, blue;
+    Shape* primitive;
 
+    ObjectNode* parent; // Pointer to parent node
+    std::vector<ObjectNode*> children;
+
+    ObjectNode() : parent(nullptr), primitive(nullptr) {}
+};
 
 
 class MyGLCanvas : public Fl_Gl_Window {
@@ -89,19 +86,23 @@ public:
 MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
 	void resetScene();
-	void setShape(OBJ_TYPE type);
+	void setShape(OBJ_TYPE type, bool isChild = false);
+	void addObject(OBJ_TYPE type, ObjectNode* parent = nullptr);
+
 	// void drawObject(ObjectNode node, glm::mat4 trans);
 	void drawSphere();
 	void drawCube();
 	void drawCylinder();
 	void drawCone();
 	void setSegments();
-	void addObject(OBJ_TYPE type);
 	int handle(int e) override;
 	void drawObjects();
 	void setupCamera();
 	int selectObject(int mouseX, int mouseY);
 	void updateCamera(int width, int height);
+
+	void drawNode(ObjectNode* node, glm::mat4 parent_transform);
+
 
 
 

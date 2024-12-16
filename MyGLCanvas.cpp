@@ -230,46 +230,46 @@ void MyGLCanvas::draw()
   glFlush();
 }
 
+void MyGLCanvas::drawObjects() {
+    for (ObjectNode& obj : objectList) {
+        if (obj.parent == nullptr) { // Start with root nodes
+            drawNode(&obj, glm::mat4(1.0f));
+        }
+    }
+}
 
 
-void MyGLCanvas::drawObjects(){
-   
+void MyGLCanvas::drawNode(ObjectNode* node, glm::mat4 parentTransform) {
+    if (!node) return;
 
-  for(ObjectNode&obj: objectList){
-    // printf("Drawing Object ID %d\n", obj.id);
+    glm::mat4 localTransform = glm::translate(glm::mat4(1.0f), node->translate) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f)) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
+                               glm::scale(glm::mat4(1.0f), node->scale);
+
+    glm::mat4 worldTransform = parentTransform * localTransform;
 
     glPushMatrix();
-        glTranslatef(obj.translate.x, obj.translate.y, obj.translate.z);
-        glRotatef(obj.rotation.x, 1.0f, 0.0f, 0.0f);
-        glRotatef(obj.rotation.y, 0.0f, 1.0f, 0.0f);
-        glRotatef(obj.rotation.z, 0.0f, 0.0f, 1.0f);
-        glScalef(obj.scale.x, obj.scale.y, obj.scale.z); 
+    glMultMatrixf(glm::value_ptr(worldTransform));
 
-        float red = obj.red / 255.0f;
-        float green = obj.green / 255.0f;
-        float blue = obj.blue / 255.0f;
-    // glColor3f(1.0f, 1.0f, 1.0f); 
-        if (wireframe) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glColor3f(1.0f, 1.0f, 1.0f);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            // printf("red: %f\n", red);
-            // printf("green: %f\n", green);
-            // printf("blue: %f\n", blue);
-            glColor3f(red, green, blue);
-        }
+    float red = node->red / 255.0f;
+    float green = node->green / 255.0f;
+    float blue = node->blue / 255.0f;
+    glColor3f(red, green, blue);
 
-     if (obj.primitive != nullptr) {
-    obj.primitive->draw();
-} else {
-    printf("Object ID %d has a null primitive\n", obj.id);
+    if (node->primitive) {
+        node->primitive->draw();
+    }
+
+    glPopMatrix();
+
+    // Draw children
+    for (ObjectNode* child : node->children) {
+        drawNode(child, worldTransform);
+    }
 }
-    
-     glPopMatrix();
-    
-  }
-}
+
 
 
 int MyGLCanvas::selectObject(int mouseX, int mouseY)
@@ -514,13 +514,32 @@ void MyGLCanvas::resetScene() {
     redraw();
 }
 
-void MyGLCanvas::setShape(OBJ_TYPE type) {
+// void MyGLCanvas::setShape(OBJ_TYPE type) {
+//     objType = type;
+//     addObject(type);
+//     printf("set shape to: %d\n", type);
+//     redraw();
+// }
+
+
+void MyGLCanvas::setShape(OBJ_TYPE type, bool isChild) {
     objType = type;
-    addObject(type);
-    printf("set shape to: %d\n", type);
+
+    if (isChild && selectedObjId != -1) {
+        auto it = std::find_if(objectList.begin(), objectList.end(),
+                               [this](const ObjectNode& obj) { return obj.id == selectedObjId; });
+
+        if (it != objectList.end()) {
+            addObject(type, &(*it));
+            printf("Added child shape of type %d to parent ID %d\n", type, selectedObjId);
+        }
+    } else {
+        addObject(type);
+        printf("Added root shape of type %d\n", type);
+    }
+
     redraw();
 }
-
 void MyGLCanvas::setSegments() {
     shape->setSegments(segmentsX, segmentsY);
 }
@@ -655,47 +674,80 @@ std::vector<double> MyGLCanvas::intersectWithCube(glm::vec3 eyePointP, glm::vec3
 }
 
 
-void MyGLCanvas::addObject(OBJ_TYPE type) {
-  ObjectNode node;
- 
-  node.id = nextObjectId++;
-  node.translate = glm::vec3(0.0f, 0.0f, 0.0f);
-  node.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-  node.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-  node.oldCenter = glm::vec3(0.0f, 0.0f, 0.0f);
-  node.red = 255;
-  node.green = 255;
-  node.blue = 255;
-  
+void MyGLCanvas::addObject(OBJ_TYPE type, ObjectNode* parent) {
+    ObjectNode* node = new ObjectNode();
+    node->id = nextObjectId++;
+    node->translate = glm::vec3(0.0f, 0.0f, 0.0f);
+    node->scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    node->rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+    node->red = 255;
+    node->green = 255;
+    node->blue = 255;
 
     switch (type) {
-        case SHAPE_SPHERE:
-            node.primitive = new Sphere();
-            break;
-        case SHAPE_CUBE:
-            node.primitive = new Cube();
-            break;
-        case SHAPE_CYLINDER:
-            node.primitive = new Cylinder();
-            break;
-        case SHAPE_CONE:
-            node.primitive = new Cone();
-            break;
-        default:
-            node.primitive = new Sphere();
-            break;
+        case SHAPE_SPHERE: node->primitive = new Sphere(); break;
+        case SHAPE_CUBE: node->primitive = new Cube(); break;
+        case SHAPE_CYLINDER: node->primitive = new Cylinder(); break;
+        case SHAPE_CONE: node->primitive = new Cone(); break;
+        default: node->primitive = nullptr; break;
     }
-    if (node.primitive != nullptr) {
-      node.primitive->setSegments(segmentsX, segmentsY);
-       objectList.push_back(node);
-    }else{
-      printf("Object ID %d has a null primitive\n", node.id);
+
+    // Set parent-child relationship
+    if (parent) {
+        node->parent = parent;
+        node->translate = glm::vec3(0.0f, 1.0f, 0.0f);
+        parent->children.push_back(node);
     }
+
+    // Add node to the flattened list
+    objectList.push_back(*node);
+
+    redraw();
+}
+
+
+
+// void MyGLCanvas::addObject(OBJ_TYPE type) {
+//   ObjectNode node;
+ 
+//   node.id = nextObjectId++;
+//   node.translate = glm::vec3(0.0f, 0.0f, 0.0f);
+//   node.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+//   node.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+//   node.oldCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+//   node.red = 255;
+//   node.green = 255;
+//   node.blue = 255;
+  
+
+//     switch (type) {
+//         case SHAPE_SPHERE:
+//             node.primitive = new Sphere();
+//             break;
+//         case SHAPE_CUBE:
+//             node.primitive = new Cube();
+//             break;
+//         case SHAPE_CYLINDER:
+//             node.primitive = new Cylinder();
+//             break;
+//         case SHAPE_CONE:
+//             node.primitive = new Cone();
+//             break;
+//         default:
+//             node.primitive = new Sphere();
+//             break;
+//     }
+//     if (node.primitive != nullptr) {
+//       node.primitive->setSegments(segmentsX, segmentsY);
+//        objectList.push_back(node);
+//     }else{
+//       printf("Object ID %d has a null primitive\n", node.id);
+//     }
    
     
 
 
-}
+// }
 
 std::vector<double> MyGLCanvas::intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
 {

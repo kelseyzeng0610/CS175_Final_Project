@@ -52,6 +52,9 @@ public:
 	Fl_Slider *scaleZSlider;
 	Fl_Check_Button* uniformScaleToggle;
 
+	Fl_Button* addChildButton;
+
+
 
     Fl_Slider *angleSlider;
 	MyGLCanvas* canvas;
@@ -427,6 +430,85 @@ static void radioButtonCB(Fl_Widget* w, void* userdata) {
         // }
 	}
 
+static void addChildCB(Fl_Widget* w, void* userdata) {
+    MyAppWindow* window = (MyAppWindow*)userdata;
+    int selectedId = window->canvas->selectedObjId;
+
+    if (selectedId == -1) {
+        printf("No object selected! Please select a parent object first.\n");
+        return;
+    }
+
+    // Find the selected object
+    auto it = std::find_if(window->canvas->objectList.begin(),
+                           window->canvas->objectList.end(),
+                           [selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+
+    if (it == window->canvas->objectList.end()) {
+        printf("Selected object not found.\n");
+        return;
+    }
+
+    // Create the shape selection window
+    Fl_Window* shapeWindow = new Fl_Window(300, 200, "Select Shape for Child");
+    shapeWindow->user_data((void*)window);
+
+    Fl_Box* shapeLabel = new Fl_Box(50, 50, 80, 25, "Shape:");
+    shapeLabel->align(FL_ALIGN_RIGHT | FL_ALIGN_INSIDE);
+    
+    Fl_Choice* shapeChoice = new Fl_Choice(140, 50, 120, 25, "");
+    shapeChoice->add("Cube");
+    shapeChoice->add("Sphere");
+    shapeChoice->add("Cylinder");
+    shapeChoice->add("Cone");
+    shapeChoice->value(0); // Default selection
+
+    Fl_Button* okButton = new Fl_Button(60, 150, 80, 30, "OK");
+    Fl_Button* cancelButton = new Fl_Button(160, 150, 80, 30, "Cancel");
+
+    // Callback for the OK button
+    okButton->callback([](Fl_Widget* btn, void* data) {
+        Fl_Window* win = (Fl_Window*)data;
+        MyAppWindow* appWin = (MyAppWindow*)win->user_data();
+        Fl_Choice* choice = (Fl_Choice*)win->child(1);
+
+        // Get the selected shape
+        int selectedShape = choice->value();
+        OBJ_TYPE type;
+        switch (selectedShape) {
+            case 0: type = SHAPE_CUBE; break;
+            case 1: type = SHAPE_SPHERE; break;
+            case 2: type = SHAPE_CYLINDER; break;
+            case 3: type = SHAPE_CONE; break;
+            default: type = SHAPE_SPHERE; break;
+        }
+
+        // Find the selected parent node
+        int parentId = appWin->canvas->selectedObjId;
+        auto parentIt = std::find_if(appWin->canvas->objectList.begin(),
+                                     appWin->canvas->objectList.end(),
+                                     [parentId](const ObjectNode& obj) { return obj.id == parentId; });
+
+        if (parentIt != appWin->canvas->objectList.end()) {
+            // Add the child node
+            appWin->canvas->setShape(type, true); // 'true' indicates adding as a child
+            printf("Child shape added to object ID %d\n", parentId);
+        }
+
+        win->hide();
+    }, shapeWindow);
+
+    // Callback for the Cancel button
+    cancelButton->callback([](Fl_Widget* btn, void* data) {
+        Fl_Window* win = (Fl_Window*)data;
+        win->hide(); // Close the window
+    }, shapeWindow);
+
+    shapeWindow->end();
+    shapeWindow->set_modal();
+    shapeWindow->show();
+}
+
 static void addShapeCB(Fl_Widget* w, void* userdata){
     MyAppWindow* window = (MyAppWindow*)userdata;
     Fl_Window* shapeWindow = new Fl_Window(300, 200, "Select Shape");
@@ -502,6 +584,10 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	pack->type(Fl_Pack::VERTICAL);
 	pack->spacing(30);
 	pack->begin();
+
+	addChildButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Add Child");
+	addChildButton->callback(addChildCB, (void*)this);
+
 
     Fl_Pack* loadPack = new Fl_Pack(w() - 100, 30, 100, h(), "Reset");
     loadPack->box(FL_DOWN_FRAME);
