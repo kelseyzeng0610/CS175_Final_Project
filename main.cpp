@@ -40,6 +40,12 @@ public:
     Fl_Slider *CamerarotYSlider;
     Fl_Slider *CamerarotZSlider;
     Fl_Slider *scaleSlider;
+    Fl_Slider *moveUSlider;
+    Fl_Slider *moveDSlider;
+    Fl_Slider *moveLSlider;
+    Fl_Slider *moveRSlider;
+    Fl_Slider *moveXYSlider;
+    Fl_Slider *moveYZSlider;
 
 	Fl_Slider *scaleXSlider;
 	Fl_Slider *scaleYSlider;
@@ -296,6 +302,100 @@ static void uniformScaleToggleCB(Fl_Widget *w, void *userdata) {
         // win->lookZSlider->value(lookV.z);
 		win->canvas->redraw();
     }
+
+// static void moveCameraCB(Fl_Widget* w, void* userdata) {
+//     // MyGLCanvas *canvas = (MyGLCanvas*)userdata;
+
+//     // Get step values from the sliders
+//     float stepU = win->moveUSlider->value() * 0.1f;
+//     float stepD = win->moveDSlider->value() * 0.1f;
+//     float stepR = win->moveRSlider->value() * 0.1f;
+//     float stepL = win->moveLSlider->value() * 0.1f;
+
+//     bool updated = false;
+
+//     // Move up
+//     if (fabs(stepU) > 1e-6) {
+//         printf("Move up\n");
+//         glm::vec3 rightVec = glm::normalize(glm::cross(win -> canvas->camera.getLookVector(), win -> canvas->camera.getUpVector()));
+//         glm::vec3 upMovementVec = glm::normalize(glm::cross(rightVec, win -> canvas->camera.getLookVector()));
+//         win -> canvas->eyePosition += upMovementVec * stepU;
+//         updated = true;
+//     }
+
+//     // Move down
+//     if (fabs(stepD) > 1e-6) {
+//         printf("Move down\n");
+//         glm::vec3 rightVec = glm::normalize(glm::cross(win -> canvas->camera.getLookVector(), win -> canvas->camera.getUpVector()));
+//         glm::vec3 downMovementVec = glm::normalize(glm::cross(win -> canvas->camera.getLookVector(), rightVec));
+//         win -> canvas->eyePosition += downMovementVec * stepD;
+//         updated = true;
+//     }
+
+//     // Move right
+//     if (fabs(stepR) > 1e-6) {
+//         printf("Move right\n");
+//         glm::vec3 rightVec = glm::normalize(glm::cross(win -> canvas->camera.getLookVector(), win -> canvas->camera.getUpVector()));
+//         win -> canvas->eyePosition += rightVec * stepR;
+//         updated = true;
+//     }
+
+//     // Move left
+//     if (fabs(stepL) > 1e-6) {
+//         printf("Move left\n");
+//         glm::vec3 leftVec = glm::normalize(glm::cross(win -> canvas->camera.getUpVector(), win -> canvas->camera.getLookVector()));
+//         win -> canvas->eyePosition += leftVec * stepL;
+//         updated = true;
+//     }
+
+//     if (updated) {
+//         // Re-orient the camera to look at the origin
+//         printf("Camera updated. Eye Position: (%f, %f, %f)\n", win -> canvas->eyePosition.x, win -> canvas->eyePosition.y, win -> canvas->eyePosition.z);
+//         win -> canvas->camera.orientLookAt(win -> canvas->eyePosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+//         // Update the canvas
+//         win -> canvas->updateCamera(win -> canvas->w(), win -> canvas->h());
+//         win -> canvas->redraw();
+
+//         // Reset all sliders to 0 for the next movement
+//         // win->moveUSlider->value(0.0f);
+//         // win->moveDSlider->value(0.0f);
+//         // win->moveRSlider->value(0.0f);
+//         // win->moveLSlider->value(0.0f);
+//     }
+// }
+
+// static void moveCameraCB(Fl_Widget* w, void* userdata) {
+// 	printf("call back\n");
+//     MyGLCanvas *canvas = (MyGLCanvas*)userdata;
+
+//     // Get the current slider values for angles (in degrees)
+//     float angleXY = win->moveXYSlider->value();  // Rotation around Y-axis (moveXY)
+//     float angleYZ = win->moveYZSlider->value();  // Rotation around X-axis (moveYZ)
+// 	printf("%f\n", angleXY);
+
+//     // Convert angles to radians
+//     float angleXYRad = glm::radians(angleXY);
+//     float angleYZRad = glm::radians(angleYZ);
+
+//     // Calculate the new eye position based on the angles
+//     float radius = glm::length(win->canvas->eyePosition); // Distance from the origin
+
+//     // Update the eye position based on spherical coordinates
+//     win->canvas->eyePosition.x = radius * sin(angleYZRad) * sin(angleXYRad);
+//     win->canvas->eyePosition.y = radius * cos(angleYZRad);
+//     win->canvas->eyePosition.z = radius * sin(angleYZRad) * cos(angleXYRad);
+
+//     // Re-orient the camera to look at the origin
+//     printf("Camera updated. Eye Position: (%f, %f, %f)\n", canvas->eyePosition.x, canvas->eyePosition.y, canvas->eyePosition.z);
+//     win->canvas->camera.orientLookAt(canvas->eyePosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+
+//     // Update the canvas
+//     win->canvas->updateCamera(win->canvas->w(), win->canvas->h());
+//     win->canvas->redraw();
+// }
+
+
 
     static void angleSliderCB(Fl_Widget* w, void* userdata) {
 		float angle = win->angleSlider->value();        
@@ -570,7 +670,6 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	scaleSlider->value(canvas->scale);
 	// scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
 	scaleSlider->callback(scaleSliderCB, (void*)this);
-	objectPack->end();
 
 
 	uniformScaleToggle = new Fl_Check_Button(0, 0, pack->w() - 10,10 , "Enable Uniform Scale");
@@ -599,6 +698,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     scaleZSlider->bounds(0.1, 5);
     scaleZSlider->value(1.0);
     scaleZSlider->callback(scaleSliderCB, (void *)this);
+	objectPack->end();
 	
 	// pack->end();
 
@@ -647,6 +747,69 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	// rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
 	CamerarotZSlider->callback(cameraRotateCB, (void*)this);
 	
+
+	// Fl_Box *CamerarotUTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move up");
+	// moveUSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	// moveUSlider->align(FL_ALIGN_TOP);
+	// moveUSlider->type(FL_HOR_SLIDER);
+	// moveUSlider->bounds(1, 179);
+	// moveUSlider->step(1);
+	// // moveUSlider->value(canvas->camera.rotU);
+	// // rotXSlider->callback(rotationSliderCB,(void *)(&(canvas->rotVec.x)));
+	// moveUSlider->callback(moveCameraCB, (void*)this);
+
+	// Fl_Box *CamerarotDTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move down");
+	// moveDSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	// moveDSlider->align(FL_ALIGN_TOP);
+	// moveDSlider->type(FL_HOR_SLIDER);
+	// moveDSlider->bounds(1, 179);
+	// moveDSlider->step(1);
+	// // moveDSlider->value(canvas->camera.rotV);
+	// // rotYSlider->callback(rotationSliderCB, (void *)(&(canvas->rotVec.y)));
+	// moveDSlider->callback(moveCameraCB, (void*)this);
+
+	// Fl_Box *CamerarotRTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move right");
+	// moveRSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	// moveRSlider->align(FL_ALIGN_TOP);
+	// moveRSlider->type(FL_HOR_SLIDER);
+	// moveRSlider->bounds(-359, 359);
+	// moveRSlider->step(1);
+	// // moveRSlider->value(canvas->camera.rotW);
+	// // rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
+	// moveRSlider->callback(moveCameraCB, (void*)this);
+
+
+	// Fl_Box *CamerarotLTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move left");
+	// moveLSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	// moveLSlider->align(FL_ALIGN_TOP);
+	// moveLSlider->type(FL_HOR_SLIDER);
+	// moveLSlider->bounds(-359, 359);
+	// moveLSlider->step(1);
+	// // CamerarotZSlider->value(canvas->camera.rotW);
+	// // rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
+	// moveLSlider->callback(moveCameraCB, (void*)this);
+
+	// Fl_Box *CamerarotRTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move XY");
+	// moveXYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	// moveXYSlider->align(FL_ALIGN_TOP);
+	// moveXYSlider->type(FL_HOR_SLIDER);
+	// moveXYSlider->bounds(-359, 359);
+	// moveXYSlider->step(1);
+	// // moveRSlider->value(canvas->camera.rotW);
+	// // rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
+	// moveXYSlider->callback(moveCameraCB, (void*)this);
+
+
+	// Fl_Box *CamerarotLTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move YZ");
+	// moveYZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+	// moveYZSlider->align(FL_ALIGN_TOP);
+	// moveYZSlider->type(FL_HOR_SLIDER);
+	// moveYZSlider->bounds(1, 179);
+	// moveYZSlider->step(1);
+	// // CamerarotZSlider->value(canvas->camera.rotW);
+	// // rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
+	// moveYZSlider->callback(moveCameraCB, (void*)this);
+
 
 	Fl_Box *viewAngelTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "View Angel");
 	angleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");

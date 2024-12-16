@@ -47,11 +47,13 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
   glm::vec3 lookVector = glm::normalize(glm::vec3(-2.0f, -2.0f, -2.0f)); // from (2,2,2) to (0,0,0)
   glm::vec3 upVector = glm::vec3(0,1,0);
   camera.orientLookVec(eyePosition, lookVector, upVector);
+  camera.orientLookAt(eyePosition, camera.getLookVector(), camera.getUpVector()); 
+  // camera.orientLookAt(eyePosition, glm::vec3(0,0,0), glm::vec3(0,1,0));            
+
 	isectOnly = 1;
 	segmentsX = segmentsY = 10;
-	
 
-
+}
 
 void MyGLCanvas::setupCamera() {
     
@@ -422,14 +424,25 @@ int MyGLCanvas::handle(int e)
         float step = 0.1f; // adjust how fast the eyePosition changes
         bool updated = false;
 
-        if (key == 'w') { // Move forward along the camera's look direction
-            eyePosition += glm::normalize(camera.getLookVector()) * step;
+        // Define a small rotation angle in degrees
+        float angleDegrees = 5.0f; 
+        float angleRad = glm::radians(angleDegrees);
+
+        // We'll rotate around the X-axis, so define the rotation matrix:
+        glm::mat4 rotationMatrix(1.0f);
+
+        if (key == 'w') { // Move up
+            glm::vec3 rightVec = glm::normalize(glm::cross(camera.getLookVector(), camera.getUpVector()));
+            glm::vec3 upMovementVec = glm::normalize(glm::cross(rightVec, camera.getLookVector()));
+            eyePosition += upMovementVec * step;
             updated = true;
-        } 
-        else if (key == 's') { // Move backward
-            eyePosition -= glm::normalize(camera.getLookVector()) * step;
+        }
+        else if (key == 's') { // Move down
+            glm::vec3 rightVec = glm::normalize(glm::cross(camera.getLookVector(), camera.getUpVector()));
+            glm::vec3 downMovementVec = glm::normalize(glm::cross(camera.getLookVector(), rightVec));
+            eyePosition += downMovementVec * step;
             updated = true;
-        } 
+        }
         else if (key == 'a') { // Move left (perpendicular to look vector and up vector)
             // Compute a left vector from cross products
             glm::vec3 leftVec = glm::normalize(glm::cross(camera.getUpVector(), camera.getLookVector()));
@@ -443,9 +456,11 @@ int MyGLCanvas::handle(int e)
         }
 
         if (updated) {
-            // Re-orient the camera with the new eyePosition
-            // TODO: this will always set the direct back to origion
-            camera.orientLookAt(eyePosition, camera.getLookVector(), camera.getUpVector());            
+            // Apply the rotation to the eyePosition
+            glm::vec4 pos(eyePosition, 1.0f);
+            pos = rotationMatrix * pos;
+            eyePosition = glm::vec3(pos);
+            camera.orientLookAt(eyePosition, glm::vec3(0,0,0), glm::vec3(0,1,0));            
             // Update projection if needed and redraw
             updateCamera(w(), h());
             redraw();

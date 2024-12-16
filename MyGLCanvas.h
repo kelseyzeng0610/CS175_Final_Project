@@ -101,6 +101,7 @@ MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	void drawObjects();
 	void setupCamera();
 	int selectObject(int mouseX, int mouseY);
+	void updateCamera(int width, int height);
 
 
 
@@ -120,7 +121,6 @@ private:
 
 	
 	void resize(int x, int y, int w, int h);
-	void updateCamera(int width, int height);
 
 	SceneObject* myObject;
 	bool castRay;
