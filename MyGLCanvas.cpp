@@ -41,20 +41,8 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	camera.setViewAngle(viewAngle);
 	camera.setNearPlane(clipNear);
 	camera.setFarPlane(clipFar);
-	// Set the mode so we are modifying our objects.
-	// camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
-  // camera.orientLookVec(glm::vec3(0.0f, 0.0f, 5.0f), 
-  //                        glm::vec3(0.0f, 0.0f, 0.0f), 
-  //                        glm::vec3(0.0f, 1.0f, 0.0f));
 
-//   glm::vec3 eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
-// glm::vec3 focusPoint  = glm::vec3(0.0f, 0.0f, 0.0f);
-
-// // Compute the look vector from the eye to the focus
-// glm::vec3 lookVec = glm::normalize(focusPoint - eyePosition);
-// glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
-
-  // camera.orientLookVec(eyePosition, lookVec, upVector);
+  
   eyePosition = glm::vec3(2.0f, 2.0f, 2.0f);
   glm::vec3 lookVector = glm::normalize(glm::vec3(-2.0f, -2.0f, -2.0f)); // from (2,2,2) to (0,0,0)
   glm::vec3 upVector = glm::vec3(0,1,0);
@@ -63,9 +51,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	segmentsX = segmentsY = 10;
 	
 
-  //  addObject(SHAPE_CUBE);
-  	// camera.orientLookVec(eyePosition, glm::vec3(-1, -1, -5), glm::vec3(0, 1, 0));
-}
+
 
 void MyGLCanvas::setupCamera() {
     
@@ -89,32 +75,35 @@ MyGLCanvas::~MyGLCanvas()
 }
 
 
+
+
 glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
 {
-	glm::vec3 eyePos = camera.getEyePoint();
-
-	glm::vec3 farPoint = getEyePoint(pixelX, pixelY, pixelWidth, pixelHeight);
-	return glm::normalize(farPoint - eyePos);
+    glm::vec3 eyePos = camera.getEyePoint();
+    glm::vec3 farPoint = getEyePoint(pixelX, pixelY, pixelWidth, pixelHeight);
+    return glm::normalize(farPoint - eyePos);
 }
+
+
 
 glm::vec3 MyGLCanvas::getEyePoint(int pixelX, int pixelY, int screenWidth, int screenHeight)
 {
-	// Convert pixel coordinates to normalized device coordinates (-1 to 1)
-	float ndcX = (2.0f * pixelX / screenWidth) - 1.0f;
-	float ndcY = 1.0f - (2.0f * pixelY / screenHeight);
+    // Convert pixel coordinates to normalized device coordinates (-1 to 1)
+    float ndcX = (2.0f * pixelX / screenWidth) - 1.0f;
+    float ndcY = 1.0f - (2.0f * pixelY / screenHeight);
 
-	// Scale based on camera's view angle and aspect ratio
-	float aspectRatio = (float)screenWidth / screenHeight;
-	float filmPlanDepth = camera.getFilmPlanDepth();
+    // Scale based on camera's view angle and aspect ratio
+    float aspectRatio = (float)screenWidth / screenHeight;
+    float filmPlanDepth = camera.getFilmPlanDepth();
 
-	// Create point in camera space (using film plane depth from camera)
-	glm::vec4 cameraPoint(ndcX * aspectRatio, ndcY, -filmPlanDepth, 1.0f);
+    // Create point in camera space (using film plane depth from camera)
+    glm::vec4 cameraPoint(ndcX * aspectRatio, ndcY, -filmPlanDepth, 1.0f);
 
-	// Transform from camera space to world space using inverse view matrix
-	glm::mat4 viewToWorld = camera.getInverseModelViewMatrix();
-	glm::vec4 worldPoint = viewToWorld * cameraPoint;
+    // Transform from camera space to world space using inverse view matrix
+    glm::mat4 viewToWorld = camera.getInverseModelViewMatrix();
+    glm::vec4 worldPoint = viewToWorld * cameraPoint;
 
-	return glm::vec3(worldPoint);
+    return glm::vec3(worldPoint);
 }
 
 glm::vec3 MyGLCanvas::getIsectPointWorldCoord(glm::vec3 eye, glm::vec3 ray, float t)
@@ -225,14 +214,7 @@ void MyGLCanvas::draw()
 		glEnable(GL_DEPTH_TEST);
 		glPolygonOffset(1, 1);
 	}
-  // printf("%f\n", camera.rotU);
-  // printf("%f\n", camera.rotV);
-  // printf("%f\n", camera.rotW);
 
-	// camera.orientLookVec(eyePosition, glm::vec3(0, 0, -1), glm::vec3(0, 1, 0)); //for mouse scroll
-  // glLoadMatrixf(glm::value_ptr(camera.getModelViewMatrix()));
-
-  // After changing view angle, get new projection
   glm::mat4 projection = camera.getProjectionMatrix();
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(glm::value_ptr(projection));
@@ -259,7 +241,7 @@ void MyGLCanvas::drawObjects(){
         glRotatef(obj.rotation.x, 1.0f, 0.0f, 0.0f);
         glRotatef(obj.rotation.y, 0.0f, 1.0f, 0.0f);
         glRotatef(obj.rotation.z, 0.0f, 0.0f, 1.0f);
-        glScalef(obj.scale.x, obj.scale.y, obj.scale.z);
+        glScalef(obj.scale.x, obj.scale.y, obj.scale.z); 
 
         float red = obj.red / 255.0f;
         float green = obj.green / 255.0f;
@@ -326,21 +308,19 @@ int MyGLCanvas::selectObject(int mouseX, int mouseY)
 
 
 
-
 void MyGLCanvas::updateCamera(int width, int height)
 {
-	float xy_aspect;
-	xy_aspect = (float)width / (float)height;
+    float xy_aspect = (float)width / (float)height;
 
-	camera.setScreenSize(width, height);
+    camera.setScreenSize(width, height);
 
-	
-	glMatrixMode(GL_PROJECTION);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glm::mat4 projection = camera.getProjectionMatrix();
+    glLoadMatrixf(glm::value_ptr(projection));
 
-	
-	glLoadIdentity();
-	glm::mat4 projection = camera.getProjectionMatrix();
-	glLoadMatrixf(glm::value_ptr(projection));
+    // Update the viewport to the new window dimensions
+    glViewport(0, 0, width, height);
 }
 
 
@@ -486,8 +466,12 @@ int MyGLCanvas::handle(int e)
 
 void MyGLCanvas::resize(int x, int y, int w, int h)
 {
-	Fl_Gl_Window::resize(x, y, w, h);
-	puts("resize called");
+    Fl_Gl_Window::resize(x, y, w, h);
+    pixelWidth = w;
+    pixelHeight = h;
+    updateCamera(w, h);
+    redraw();
+    printf("resize called: width=%d, height=%d\n", w, h);
 }
 
 void MyGLCanvas::drawAxis()

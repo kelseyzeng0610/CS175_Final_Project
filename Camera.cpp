@@ -93,11 +93,13 @@ glm::mat4 Camera::getUnhingeMatrix()
 	);
 }
 
-// Derived from slide 106
+
+
 glm::mat4 Camera::getProjectionMatrix()
 {
-	return getUnhingeMatrix() * getScaleMatrix();
+    return glm::perspective(glm::radians(viewAngle), screenWidthRatio, nearPlane, farPlane);
 }
+
 
 // Derived from slide 106
 glm::mat4 Camera::getModelViewMatrix()
@@ -170,6 +172,9 @@ glm::vec3 Camera::getEyePoint()
 {
 	return eyePoint;
 }
+
+
+
 
 glm::vec3 Camera::getLookVector()
 {
