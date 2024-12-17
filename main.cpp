@@ -650,7 +650,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     pack->end();
 
     // Second Column Pack for Orientation and Camera Controls
-    Fl_Pack* packCol2 = new Fl_Pack(w() - 155, 30, 150, h() - 40, "Transformations");
+    Fl_Pack* packCol2 = new Fl_Pack(w() - 155, 30, 150, h() - 40);
     packCol2->box(FL_DOWN_FRAME);
     packCol2->type(Fl_Pack::VERTICAL);
     packCol2->spacing(10); // Reduced spacing for better layout
@@ -748,7 +748,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     objectPack->end();
 
     // Camera Pack
-    Fl_Pack *cameraPack = new Fl_Pack(10, 460, packCol2->w() - 20, 200, "Camera");
+    Fl_Pack *cameraPack = new Fl_Pack(10, 460, packCol2->w() - 20, 200);
     cameraPack->box(FL_DOWN_FRAME);
     cameraPack->labelfont(1);
     cameraPack->type(Fl_Pack::VERTICAL);
@@ -809,7 +809,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 /**************************************** main() ********************/
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
-    win = new MyAppWindow(900, 600, "Dragging Object");
+    win = new MyAppWindow(900, 600, "Scene Builder 1.0");
     win->resizable(win->canvas); // Make the OpenGL canvas resizable
     // Set the callback to reflect the current value of selected object
     win->canvas->onSelectionChanged = []() {
