@@ -522,17 +522,40 @@ case FL_RELEASE:
 
         // We'll rotate around the X-axis, so define the rotation matrix:
         glm::mat4 rotationMatrix(1.0f);
+        // Target maximum position values for clamping when 'w' is pressed
+        glm::vec3 maxEyePosition(0.094222f, 3.524521f, 0.094222f);
+        glm::vec3 minEyePosition(0.164884f, -3.583608f, 0.164884f);
 
         if (key == 'w') { // Move up
             glm::vec3 rightVec = glm::normalize(glm::cross(camera.getLookVector(), camera.getUpVector()));
             glm::vec3 upMovementVec = glm::normalize(glm::cross(rightVec, camera.getLookVector()));
+
+            // Update the eyePosition
             eyePosition += upMovementVec * step;
+            printf("before clamp w: %f, %f, %f\n", eyePosition.x, eyePosition.y, eyePosition.z);
+
+            // Clamp the eyePosition to the specified maximum values
+            eyePosition.x = glm::max(eyePosition.x, maxEyePosition.x);
+            // eyePosition.y = glm::min(eyePosition.y, maxEyePosition.y);
+            eyePosition.z = glm::max(eyePosition.z, maxEyePosition.z);
+
+            printf("after clamp w: %f, %f, %f\n", eyePosition.x, eyePosition.y, eyePosition.z);
             updated = true;
         }
         else if (key == 's') { // Move down
             glm::vec3 rightVec = glm::normalize(glm::cross(camera.getLookVector(), camera.getUpVector()));
             glm::vec3 downMovementVec = glm::normalize(glm::cross(camera.getLookVector(), rightVec));
+
+            // Update the eyePosition
             eyePosition += downMovementVec * step;
+            printf("before clamp s: %f, %f, %f\n", eyePosition.x, eyePosition.y, eyePosition.z);
+
+            // Clamp the eyePosition to the specified maximum values for 's'
+            eyePosition.x = glm::max(eyePosition.x, minEyePosition.x);
+            eyePosition.y = glm::max(eyePosition.y, minEyePosition.y);
+            eyePosition.z = glm::max(eyePosition.z, minEyePosition.z);
+
+            printf("after clamp s: %f, %f, %f\n", eyePosition.x, eyePosition.y, eyePosition.z);
             updated = true;
         }
         else if (key == 'a') { // Move left (perpendicular to look vector and up vector)
