@@ -537,7 +537,7 @@ case FL_RELEASE:
             // Clamp the eyePosition to the specified maximum values
             eyePosition.x = glm::max(eyePosition.x, maxEyePosition.x);
             // eyePosition.y = glm::min(eyePosition.y, maxEyePosition.y);
-            eyePosition.z = glm::max(eyePosition.z, maxEyePosition.z);
+            // eyePosition.z = glm::max(eyePosition.z, maxEyePosition.z);
 
             printf("after clamp w: %f, %f, %f\n", eyePosition.x, eyePosition.y, eyePosition.z);
             updated = true;
@@ -553,7 +553,7 @@ case FL_RELEASE:
             // Clamp the eyePosition to the specified maximum values for 's'
             eyePosition.x = glm::max(eyePosition.x, minEyePosition.x);
             eyePosition.y = glm::max(eyePosition.y, minEyePosition.y);
-            eyePosition.z = glm::max(eyePosition.z, minEyePosition.z);
+            // eyePosition.z = glm::max(eyePosition.z, minEyePosition.z);
 
             printf("after clamp s: %f, %f, %f\n", eyePosition.x, eyePosition.y, eyePosition.z);
             updated = true;
