@@ -1,0 +1,40 @@
+<scenefile>
+<globaldata>
+<diffusecoeff v="0.5"/>
+<specularcoeff v="0.5"/>
+<ambientcoeff v="0.5"/>
+</globaldata>
+<lightdata>
+<id v="0"/>
+<color r="0.5" g="0.5" b="0.5"/>
+<position x="2" y="2" z="2"/>
+    </lightdata>
+<cameradata>
+<pos x="2" y="2" z="2"/>
+<up x="0" y="1" z="0"/>
+<heightangle v="60"/>
+</cameradata>
+<object type="tree" name="root">
+<transblock>
+<scale x="1" y="1" z="1"/>
+<translate x="0.677348" y="0.0557051" z="-0.609276"/>
+<object type="primitive" name="cube">
+<diffuse r="1" g="1" b="1"/>
+</object>
+</transblock>
+<transblock>
+<scale x="1" y="1" z="1"/>
+<translate x="-0.429139" y="-0.29874" z="0.840315"/>
+<object type="primitive" name="cube">
+<diffuse r="1" g="0.458824" b="1"/>
+</object>
+</transblock>
+<transblock>
+<scale x="1" y="1" z="1"/>
+<translate x="0" y="1" z="0"/>
+<object type="primitive" name="cube">
+<diffuse r="1" g="1" b="1"/>
+</object>
+</transblock>
+</object>
+</scenefile>
