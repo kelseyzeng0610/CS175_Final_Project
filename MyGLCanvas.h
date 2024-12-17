@@ -51,6 +51,10 @@ public:
 	// glm::vec3 lookVector;
 	// glm::vec3 upVector;
 
+	glm::vec3 dragPlaneNormal;
+	glm::vec3 dragPlanePoint;
+	bool dragging = false;
+
 	int wireframe;
 	int  viewAngle;
 	float clipNear;
@@ -81,7 +85,8 @@ public:
 	int fileIndex;
 
 	// used in flattened list to make update values
-	std::vector<ObjectNode> objectList;
+	std::vector<ObjectNode*> objectList;
+
 
 
 MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
@@ -113,7 +118,8 @@ private:
 	glm::vec3 generateRay(int pixelX, int pixelY);
 	glm::vec3 getEyePoint(int pixelX, int pixelY, int screenWidth, int screenHeight);
 	glm::vec3 getIsectPointWorldCoord(glm::vec3 eye, glm::vec3 ray, float t);
-	double intersect(ObjectNode& obj, glm::vec3 eyePointP, glm::vec3 rayV);
+	double intersect(ObjectNode* obj, glm::vec3 eyePointP, glm::vec3 rayV);
+
 
 	void draw();
 
@@ -136,7 +142,8 @@ private:
 
 	int mouseX = 0;
 	int mouseY = 0;
-	void testObjectIntersection(ObjectNode* node, glm::mat4 parentTransform, glm::vec3 eyePoint, glm::vec3 rayDir, const ObjectNode*& closestObj, float& closestT);
+	void testObjectIntersection(ObjectNode* node, glm::mat4 parentTransform, glm::vec3 eyePoint, glm::vec3 rayDir, ObjectNode*& closestObj, float& closestT);
+
 	std::vector<double> intersectWithSphere(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 	std::vector<double> intersectWithCube(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 	std::vector<double> intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);

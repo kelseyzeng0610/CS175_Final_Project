@@ -22,20 +22,23 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <algorithm> // For std::find_if
 
 using namespace std;
 
+// Forward declaration
 class MyAppWindow;
 MyAppWindow *win;
 
+// Updated to handle ObjectNode* instead of ObjectNode
 class MyAppWindow : public Fl_Window {
 public:
-	Fl_Button* wireButton;
-	Fl_Button* drawButton;
-	Fl_Button *smoothButton;
-	Fl_Button *fillButton;
+    Fl_Button* wireButton;
+    Fl_Button* drawButton;
+    Fl_Button *smoothButton;
+    Fl_Button *fillButton;
     Fl_Button *normalButton;
-	Fl_Button* resetSceneButton;
+    Fl_Button* resetSceneButton;
     Fl_Slider *rotXSlider;
     Fl_Slider *rotYSlider;
     Fl_Slider *rotZSlider;
@@ -50,87 +53,81 @@ public:
     Fl_Slider *moveXYSlider;
     Fl_Slider *moveYZSlider;
 
-	Fl_Slider *scaleXSlider;
-	Fl_Slider *scaleYSlider;
-	Fl_Slider *scaleZSlider;
-	Fl_Check_Button* uniformScaleToggle;
+    Fl_Slider *scaleXSlider;
+    Fl_Slider *scaleYSlider;
+    Fl_Slider *scaleZSlider;
+    Fl_Check_Button* uniformScaleToggle;
 
-	Fl_Button* addChildButton;
-
-
+    Fl_Button* addChildButton;
 
     Fl_Slider *angleSlider;
-	MyGLCanvas* canvas;
+    MyGLCanvas* canvas;
 
-	Fl_Slider* rSlider;
+    Fl_Slider* rSlider;
     Fl_Slider* gSlider;
     Fl_Slider* bSlider;
-	Fl_Slider* sizeSlider;
+    Fl_Slider* sizeSlider;
 
-	Fl_Button* isectButton;
-	Fl_Button* renderButton;
-	Fl_Slider* maxRecursionDepthSlider;
-	Fl_Button* addShapeButton;
-	Fl_Slider* segmentsXSlider;
-	Fl_Slider* segmentsYSlider;
+    Fl_Button* isectButton;
+    Fl_Button* renderButton;
+    Fl_Slider* maxRecursionDepthSlider;
+    Fl_Button* addShapeButton;
+    Fl_Slider* segmentsXSlider;
+    Fl_Slider* segmentsYSlider;
 
 public:
-	// APP WINDOW CONSTRUCTOR
-	MyAppWindow(int W, int H, const char*L = 0);
+    // APP WINDOW CONSTRUCTOR
+    MyAppWindow(int W, int H, const char*L = 0);
 
-	static void idleCB(void* userdata) {
-		win->canvas->redraw();
-		
-	}
+    static void idleCB(void* userdata) {
+        win->canvas->redraw();
+    }
 
-	
-	
+    void updateSelectedObject() {
+        int selectedId = canvas->selectedObjId;
+        if (selectedId != -1) {
+            // Updated to handle ObjectNode*
+            auto it = std::find_if(canvas->objectList.begin(),
+                                   canvas->objectList.end(),
+                                   [selectedId](ObjectNode* obj) { return obj->id == selectedId; });
 
-	void updateSelectedObject() {
-		int selectedId = canvas->selectedObjId;
-		if (selectedId != -1) {
-			auto it = std::find_if(canvas->objectList.begin(),
-								canvas->objectList.end(),
-								[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+            if (it != canvas->objectList.end()) {
+                ObjectNode* obj = *it; // Dereference pointer
 
-			if (it != canvas->objectList.end()) {
-				// Update the sliders to reflect the selected object's color
-				rSlider->value(it->red);
-				gSlider->value(it->green);
-				bSlider->value(it->blue);
+                // Update the sliders to reflect the selected object's color
+                rSlider->value(obj->red);
+                gSlider->value(obj->green);
+                bSlider->value(obj->blue);
 
-				rotXSlider->value(it->rotation.x);
-				rotYSlider->value(it->rotation.y);
-				rotZSlider->value(it->rotation.z);
+                rotXSlider->value(obj->rotation.x);
+                rotYSlider->value(obj->rotation.y);
+                rotZSlider->value(obj->rotation.z);
 
-				
-				scaleXSlider->value(it->scale.x);
-                scaleYSlider->value(it->scale.y);
-                scaleZSlider->value(it->scale.z);
-                scaleSlider->value(it->scale.x);
+                scaleXSlider->value(obj->scale.x);
+                scaleYSlider->value(obj->scale.y);
+                scaleZSlider->value(obj->scale.z);
+                scaleSlider->value(obj->scale.x); // Assuming uniform scale
 
-				// Redraw them to show the updated value
-				rSlider->redraw();
-				gSlider->redraw();
-				bSlider->redraw();
+                // Redraw them to show the updated value
+                rSlider->redraw();
+                gSlider->redraw();
+                bSlider->redraw();
 
-				rotXSlider->redraw();
-				rotYSlider->redraw();
-				rotZSlider->redraw();
+                rotXSlider->redraw();
+                rotYSlider->redraw();
+                rotZSlider->redraw();
 
-				scaleSlider->redraw();
-				scaleXSlider->redraw();
+                scaleSlider->redraw();
+                scaleXSlider->redraw();
                 scaleYSlider->redraw();
                 scaleZSlider->redraw();
-                
-			}
-		}
-	}
+            }
+        }
+    }
 
 private:
 
-
-static void uniformScaleToggleCB(Fl_Widget *w, void *userdata) {
+    static void uniformScaleToggleCB(Fl_Widget *w, void *userdata) {
         // Handle toggle for uniform scaling
         if (((Fl_Check_Button *)w)->value() == 1) {
             win->scaleXSlider->deactivate();
@@ -145,294 +142,179 @@ static void uniformScaleToggleCB(Fl_Widget *w, void *userdata) {
         }
     }
 
-	// Someone changed one of the sliders
-	static void toggleCB(Fl_Widget* w, void* userdata) {
-		int value = ((Fl_Button*)w)->value();
-		printf("value: %d\n", value);
-		*((int*)userdata) = value;
-	}
+    // Updated to handle ObjectNode* instead of ObjectNode&
+    static void toggleCB(Fl_Widget* w, void* userdata) {
+        int value = ((Fl_Button*)w)->value();
+        printf("Toggle Button value: %d\n", value);
+        *((int*)userdata) = value;
+    }
 
-	static void sliderCB(Fl_Widget* w, void* userdata) {
-		int value = ((Fl_Slider*)w)->value();
-		printf("value: %d\n", value);
-		*((float*)userdata) = value;
-	}
+    static void sliderCB(Fl_Widget* w, void* userdata) {
+        float value = ((Fl_Slider*)w)->value();
+        printf("Slider value: %f\n", value);
+        *((float*)userdata) = value;
+    }
 
-	static void sliderFloatCB(Fl_Widget *w, void *userdata) {
+    static void sliderFloatCB(Fl_Widget *w, void *userdata) {
         float value = ((Fl_Slider *)w)->value();
-        printf("value: %f\n", value);
+        printf("Float Slider value: %f\n", value);
         *((float *)userdata) = value;
     }
 
-	static void resetSceneCB(Fl_Widget* w, void* data) {
-        cout << "Reest Scene" << endl;
+    static void resetSceneCB(Fl_Widget* w, void* data) {
+        cout << "Reset Scene" << endl;
         win->canvas->resetScene();
-        // win->updateGUIValues();
         win->canvas->redraw();
     }
 
-	static void redCB(Fl_Widget* w, void* userdata) {
+    static void redCB(Fl_Widget* w, void* userdata) {
         int value = ((Fl_Slider*)w)->value();
-		int selectedId = win->canvas->selectedObjId;
-
-		if (selectedId != -1) {
-			auto it = std::find_if(
-				win->canvas->objectList.begin(),
-				win->canvas->objectList.end(),
-				[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
-
-			if (it != win->canvas->objectList.end()) {
-				// Update the red values based on the slider
-				it->red = win->rSlider->value();
-				win->canvas->redraw();
-			}
-		}
-    }
-
-    static void greenCB(Fl_Widget* w, void* userdata) {
-        int value = ((Fl_Slider*)w)->value();
-		int selectedId = win->canvas->selectedObjId;
-
-		if (selectedId != -1) {
-			auto it = std::find_if(
-				win->canvas->objectList.begin(),
-				win->canvas->objectList.end(),
-				[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
-
-			if (it != win->canvas->objectList.end()) {
-				// Update the green values based on the slider
-				it->green = win->gSlider->value();
-				win->canvas->redraw();
-			}
-		}
-    }
-
-    static void blueCB(Fl_Widget* w, void* userdata) {
-        int value = ((Fl_Slider*)w)->value();
-		int selectedId = win->canvas->selectedObjId;
-
-		if (selectedId != -1) {
-			auto it = std::find_if(
-				win->canvas->objectList.begin(),
-				win->canvas->objectList.end(),
-				[selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
-
-			if (it != win->canvas->objectList.end()) {
-				// Update the blue values based on the slider
-				it->blue = win->bSlider->value();
-				win->canvas->redraw();
-			}
-		}
-    }
-
-	static void sizeCB(Fl_Widget* w, void* userdata) {
-        int value = ((Fl_Slider*)w)->value();
-        printf("value: %d\n", value);
-		// TODO: add size property
-    }
-
-	static void renderCB(Fl_Widget*w, void*data) {
-		cout << "render scene" << endl;
-		// TODO: add ray tracing
-		// win->canvas->renderScene();
-	}
-	
-	static void maxRecursionDepthSliderCB(Fl_Widget* w, void* userdata) {
-		int value = win->maxRecursionDepthSlider->value();
-		win->canvas->maxRecursionDepth = value;
-	}
-
-	static void segmentsCB(Fl_Widget* w, void* userdata) {
-		int value = ((Fl_Slider*)w)->value();
-		printf("value: %d\n", value);
-		*((int*)userdata) = value;
-		win->canvas->setSegments();
-	}
-
-	static void rotationSliderCB(Fl_Widget* w, void* userdata) {
-    int selectedId = win->canvas->selectedObjId;
-
-
-    if (selectedId != -1) {
-        auto it = std::find_if(
-            win->canvas->objectList.begin(),
-            win->canvas->objectList.end(),
-            [selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
-
-        if (it != win->canvas->objectList.end()) {
-          
-            it->rotation.x = win->rotXSlider->value();
-            it->rotation.y = win->rotYSlider->value();
-            it->rotation.z = win->rotZSlider->value();
-            win->canvas->redraw();
-        }
-    }
-}
-
-
-	 static void scaleSliderCB(Fl_Widget *w, void *userdata) {
+        printf("Red Slider value: %d\n", value);
         int selectedId = win->canvas->selectedObjId;
 
         if (selectedId != -1) {
             auto it = std::find_if(
                 win->canvas->objectList.begin(),
                 win->canvas->objectList.end(),
-                [selectedId](const ObjectNode &obj) { return obj.id == selectedId; });
+                [selectedId](ObjectNode* obj) { return obj->id == selectedId; });
 
             if (it != win->canvas->objectList.end()) {
+                ObjectNode* obj = *it;
+                obj->red = win->rSlider->value();
+                win->canvas->redraw();
+            }
+        }
+    }
+
+    static void greenCB(Fl_Widget* w, void* userdata) {
+        int value = ((Fl_Slider*)w)->value();
+        printf("Green Slider value: %d\n", value);
+        int selectedId = win->canvas->selectedObjId;
+
+        if (selectedId != -1) {
+            auto it = std::find_if(
+                win->canvas->objectList.begin(),
+                win->canvas->objectList.end(),
+                [selectedId](ObjectNode* obj) { return obj->id == selectedId; });
+
+            if (it != win->canvas->objectList.end()) {
+                ObjectNode* obj = *it;
+                obj->green = win->gSlider->value();
+                win->canvas->redraw();
+            }
+        }
+    }
+
+    static void blueCB(Fl_Widget* w, void* userdata) {
+        int value = ((Fl_Slider*)w)->value();
+        printf("Blue Slider value: %d\n", value);
+        int selectedId = win->canvas->selectedObjId;
+
+        if (selectedId != -1) {
+            auto it = std::find_if(
+                win->canvas->objectList.begin(),
+                win->canvas->objectList.end(),
+                [selectedId](ObjectNode* obj) { return obj->id == selectedId; });
+
+            if (it != win->canvas->objectList.end()) {
+                ObjectNode* obj = *it;
+                obj->blue = win->bSlider->value();
+                win->canvas->redraw();
+            }
+        }
+    }
+
+    static void sizeCB(Fl_Widget* w, void* userdata) {
+        int value = ((Fl_Slider*)w)->value();
+        printf("Size Slider value: %d\n", value);
+        // TODO: add size property
+    }
+
+    static void renderCB(Fl_Widget* w, void* data) {
+        cout << "Render Scene" << endl;
+        // TODO: add ray tracing
+        // win->canvas->renderScene();
+    }
+
+    static void maxRecursionDepthSliderCB(Fl_Widget* w, void* userdata) {
+        int value = win->maxRecursionDepthSlider->value();
+        win->canvas->maxRecursionDepth = value;
+    }
+
+    static void segmentsCB(Fl_Widget* w, void* userdata) {
+        int value = ((Fl_Slider*)w)->value();
+        printf("Segments Slider value: %d\n", value);
+        *((int*)userdata) = value;
+        win->canvas->setSegments();
+    }
+
+    static void rotationSliderCB(Fl_Widget* w, void* userdata) {
+        int selectedId = win->canvas->selectedObjId;
+
+        if (selectedId != -1) {
+            auto it = std::find_if(
+                win->canvas->objectList.begin(),
+                win->canvas->objectList.end(),
+                [selectedId](ObjectNode* obj) { return obj->id == selectedId; });
+
+            if (it != win->canvas->objectList.end()) {
+                ObjectNode* obj = *it;
+                obj->rotation.x = win->rotXSlider->value();
+                obj->rotation.y = win->rotYSlider->value();
+                obj->rotation.z = win->rotZSlider->value();
+                win->canvas->redraw();
+            }
+        }
+    }
+
+    static void scaleSliderCB(Fl_Widget *w, void *userdata) {
+        int selectedId = win->canvas->selectedObjId;
+
+        if (selectedId != -1) {
+            auto it = std::find_if(
+                win->canvas->objectList.begin(),
+                win->canvas->objectList.end(),
+                [selectedId](ObjectNode* obj) { return obj->id == selectedId; });
+
+            if (it != win->canvas->objectList.end()) {
+                ObjectNode* obj = *it;
                 if (w == win->scaleSlider) {
                     // Uniform scaling
                     float uniformScale = win->scaleSlider->value();
-                    it->scale.x = uniformScale;
-                    it->scale.y = uniformScale;
-                    it->scale.z = uniformScale;
+                    obj->scale.x = uniformScale;
+                    obj->scale.y = uniformScale;
+                    obj->scale.z = uniformScale;
                 } else if (w == win->scaleXSlider) {
-                    it->scale.x = win->scaleXSlider->value();
+                    obj->scale.x = win->scaleXSlider->value();
                 } else if (w == win->scaleYSlider) {
-                    it->scale.y = win->scaleYSlider->value();
+                    obj->scale.y = win->scaleYSlider->value();
                 } else if (w == win->scaleZSlider) {
-                    it->scale.z = win->scaleZSlider->value();
+                    obj->scale.z = win->scaleZSlider->value();
                 }
 
                 win->canvas->redraw();
             }
         }
     }
-	
+
     static void cameraRotateCB(Fl_Widget* w, void* userdata) {
         win->canvas->camera.setRotUVW(win->CamerarotXSlider->value(), win->CamerarotYSlider->value(), win->CamerarotZSlider->value());
-        // glm::vec3 lookV = win->canvas->camera.getLookVector();
-        // lookV = glm::normalize(lookV);
-        // win->lookXSlider->value(lookV.x);
-        // win->lookYSlider->value(lookV.y);
-        // win->lookZSlider->value(lookV.z);
-		win->canvas->redraw();
+        win->canvas->redraw();
     }
 
-// static void moveCameraCB(Fl_Widget* w, void* userdata) {
-//     // MyGLCanvas *canvas = (MyGLCanvas*)userdata;
-
-//     // Get step values from the sliders
-//     float stepU = win->moveUSlider->value() * 0.1f;
-//     float stepD = win->moveDSlider->value() * 0.1f;
-//     float stepR = win->moveRSlider->value() * 0.1f;
-//     float stepL = win->moveLSlider->value() * 0.1f;
-
-//     bool updated = false;
-
-//     // Move up
-//     if (fabs(stepU) > 1e-6) {
-//         printf("Move up\n");
-//         glm::vec3 rightVec = glm::normalize(glm::cross(win -> canvas->camera.getLookVector(), win -> canvas->camera.getUpVector()));
-//         glm::vec3 upMovementVec = glm::normalize(glm::cross(rightVec, win -> canvas->camera.getLookVector()));
-//         win -> canvas->eyePosition += upMovementVec * stepU;
-//         updated = true;
-//     }
-
-//     // Move down
-//     if (fabs(stepD) > 1e-6) {
-//         printf("Move down\n");
-//         glm::vec3 rightVec = glm::normalize(glm::cross(win -> canvas->camera.getLookVector(), win -> canvas->camera.getUpVector()));
-//         glm::vec3 downMovementVec = glm::normalize(glm::cross(win -> canvas->camera.getLookVector(), rightVec));
-//         win -> canvas->eyePosition += downMovementVec * stepD;
-//         updated = true;
-//     }
-
-//     // Move right
-//     if (fabs(stepR) > 1e-6) {
-//         printf("Move right\n");
-//         glm::vec3 rightVec = glm::normalize(glm::cross(win -> canvas->camera.getLookVector(), win -> canvas->camera.getUpVector()));
-//         win -> canvas->eyePosition += rightVec * stepR;
-//         updated = true;
-//     }
-
-//     // Move left
-//     if (fabs(stepL) > 1e-6) {
-//         printf("Move left\n");
-//         glm::vec3 leftVec = glm::normalize(glm::cross(win -> canvas->camera.getUpVector(), win -> canvas->camera.getLookVector()));
-//         win -> canvas->eyePosition += leftVec * stepL;
-//         updated = true;
-//     }
-
-//     if (updated) {
-//         // Re-orient the camera to look at the origin
-//         printf("Camera updated. Eye Position: (%f, %f, %f)\n", win -> canvas->eyePosition.x, win -> canvas->eyePosition.y, win -> canvas->eyePosition.z);
-//         win -> canvas->camera.orientLookAt(win -> canvas->eyePosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-//         // Update the canvas
-//         win -> canvas->updateCamera(win -> canvas->w(), win -> canvas->h());
-//         win -> canvas->redraw();
-
-//         // Reset all sliders to 0 for the next movement
-//         // win->moveUSlider->value(0.0f);
-//         // win->moveDSlider->value(0.0f);
-//         // win->moveRSlider->value(0.0f);
-//         // win->moveLSlider->value(0.0f);
-//     }
-// }
-
-// static void moveCameraCB(Fl_Widget* w, void* userdata) {
-// 	printf("call back\n");
-//     MyGLCanvas *canvas = (MyGLCanvas*)userdata;
-
-//     // Get the current slider values for angles (in degrees)
-//     float angleXY = win->moveXYSlider->value();  // Rotation around Y-axis (moveXY)
-//     float angleYZ = win->moveYZSlider->value();  // Rotation around X-axis (moveYZ)
-// 	printf("%f\n", angleXY);
-
-//     // Convert angles to radians
-//     float angleXYRad = glm::radians(angleXY);
-//     float angleYZRad = glm::radians(angleYZ);
-
-//     // Calculate the new eye position based on the angles
-//     float radius = glm::length(win->canvas->eyePosition); // Distance from the origin
-
-//     // Update the eye position based on spherical coordinates
-//     win->canvas->eyePosition.x = radius * sin(angleYZRad) * sin(angleXYRad);
-//     win->canvas->eyePosition.y = radius * cos(angleYZRad);
-//     win->canvas->eyePosition.z = radius * sin(angleYZRad) * cos(angleXYRad);
-
-//     // Re-orient the camera to look at the origin
-//     printf("Camera updated. Eye Position: (%f, %f, %f)\n", canvas->eyePosition.x, canvas->eyePosition.y, canvas->eyePosition.z);
-//     win->canvas->camera.orientLookAt(canvas->eyePosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-//     // Update the canvas
-//     win->canvas->updateCamera(win->canvas->w(), win->canvas->h());
-//     win->canvas->redraw();
-// }
-
-
-
     static void angleSliderCB(Fl_Widget* w, void* userdata) {
-		float angle = win->angleSlider->value();        
-		win->canvas->camera.setViewAngle(angle);
-		win->canvas->redraw();
+        float angle = win->angleSlider->value();
+        win->canvas->camera.setViewAngle(angle);
+        win->canvas->redraw();
     }
 };
 
-//TODO: DRAW SHAPES
+// Callback for radio buttons (if implemented)
 static void radioButtonCB(Fl_Widget* w, void* userdata) {
-        // const char* value = ((Fl_Button*)w)->label();
-        // if (strcmp("Cube", value) == 0) {
-        //     win->canvas->setShape(SHAPE_CUBE);
-        // }
-        // else if (strcmp("Cylinder", value) == 0) {
-        //     win->canvas->setShape(SHAPE_CYLINDER);
-        // }
-        // else if (strcmp("Cone", value) == 0) {
-        //     win->canvas->setShape(SHAPE_CONE);
-        // }
-        // else if (strcmp("Sphere", value) == 0) {
-        //     win->canvas->setShape(SHAPE_SPHERE);
-        // }
-        // else if (strcmp("Special", value) == 0) {
-        //     win->canvas->setShape(SHAPE_SPECIAL1);
-        // }
-        // else if (strcmp("Scene", value) == 0) {
-        //     win->canvas->setShape(SHAPE_SCENE);
-        // }
-	}
+    // Implement shape selection if needed
+}
 
+// Updated to handle ObjectNode* instead of ObjectNode&
 static void addChildCB(Fl_Widget* w, void* userdata) {
     MyAppWindow* window = (MyAppWindow*)userdata;
     int selectedId = window->canvas->selectedObjId;
@@ -445,7 +327,7 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
     // Find the selected object
     auto it = std::find_if(window->canvas->objectList.begin(),
                            window->canvas->objectList.end(),
-                           [selectedId](const ObjectNode& obj) { return obj.id == selectedId; });
+                           [selectedId](ObjectNode* obj) { return obj->id == selectedId; });
 
     if (it == window->canvas->objectList.end()) {
         printf("Selected object not found.\n");
@@ -458,7 +340,7 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
 
     Fl_Box* shapeLabel = new Fl_Box(50, 50, 80, 25, "Shape:");
     shapeLabel->align(FL_ALIGN_RIGHT | FL_ALIGN_INSIDE);
-    
+
     Fl_Choice* shapeChoice = new Fl_Choice(140, 50, 120, 25, "");
     shapeChoice->add("Cube");
     shapeChoice->add("Sphere");
@@ -490,11 +372,11 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
         int parentId = appWin->canvas->selectedObjId;
         auto parentIt = std::find_if(appWin->canvas->objectList.begin(),
                                      appWin->canvas->objectList.end(),
-                                     [parentId](const ObjectNode& obj) { return obj.id == parentId; });
+                                     [parentId](ObjectNode* obj) { return obj->id == parentId; });
 
         if (parentIt != appWin->canvas->objectList.end()) {
             // Add the child node
-            appWin->canvas->setShape(type, true); // 'true' indicates adding as a child
+            appWin->canvas->setShape(type, *parentIt); // Pass the parent pointer
             printf("Child shape added to object ID %d\n", parentId);
         }
 
@@ -512,7 +394,7 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
     shapeWindow->show();
 }
 
-//helper function to get the corresponding name of that enum index
+// Helper function to get the corresponding name of that enum index
 std::string getPrimitiveTypeName(int type) {
     switch (type) {
         case SHAPE_CUBE:
@@ -528,12 +410,14 @@ std::string getPrimitiveTypeName(int type) {
     }
 }
 
+// Updated to handle ObjectNode* instead of ObjectNode&
 static void writeSceneToXML() {
-	printf("creating xml\n");
-	string filename = "scene" + to_string(win->canvas->fileIndex) + ".xml";
-	win->canvas->fileIndex++;
-	ofstream MyFile(filename);
+    printf("Creating XML\n");
+    string filename = "scene" + to_string(win->canvas->fileIndex) + ".xml";
+    win->canvas->fileIndex++;
+    ofstream MyFile(filename);
     std::ostringstream xml;	// Write to the file
+
     // Start of the XML file
     xml << "<scenefile>\n";
 
@@ -543,7 +427,7 @@ static void writeSceneToXML() {
         << "<specularcoeff v=\"0.5\"/>\n"
         << "<ambientcoeff v=\"0.5\"/>\n"
         << "</globaldata>\n";
-    
+
     // Add light data
     xml << "<lightdata>\n";
     xml << "<id v=\"0\"/>\n";
@@ -551,9 +435,9 @@ static void writeSceneToXML() {
         << "\" g=\"" << 0.5
         << "\" b=\"" << 0.5 << "\"/>\n";
     xml << "<position x=\"" << win->canvas->eyePosition.x 
-        << "\" y=\"" << win->canvas->eyePosition.x 
-        << "\" z=\"" << win->canvas->eyePosition.x << "\"/>\n";
-    xml << "    </lightdata>\n";
+        << "\" y=\"" << win->canvas->eyePosition.y 
+        << "\" z=\"" << win->canvas->eyePosition.z << "\"/>\n";
+    xml << "</lightdata>\n";
 
     // Write camera data
     glm::vec3 eyePos = win->canvas->camera.getEyePoint();
@@ -572,24 +456,24 @@ static void writeSceneToXML() {
     // Loop through the object list
     for (const auto& obj : win->canvas->objectList) {
         xml << "<transblock>\n";
-        
+
         // Write scale transformation
-        xml << "<scale x=\"" << obj.scale.x
-            << "\" y=\"" << obj.scale.y
-            << "\" z=\"" << obj.scale.z << "\"/>\n";
-        
+        xml << "<scale x=\"" << obj->scale.x
+            << "\" y=\"" << obj->scale.y
+            << "\" z=\"" << obj->scale.z << "\"/>\n";
+
         // Write translation transformation
-        xml << "<translate x=\"" << obj.translate.x
-            << "\" y=\"" << obj.translate.y
-            << "\" z=\"" << obj.translate.z << "\"/>\n";
+        xml << "<translate x=\"" << obj->translate.x
+            << "\" y=\"" << obj->translate.y
+            << "\" z=\"" << obj->translate.z << "\"/>\n";
 
         // Write the primitive object
-        xml << "<object type=\"primitive\" name=\"" << getPrimitiveTypeName(obj.primitive->getType()) << "\">\n";
+        xml << "<object type=\"primitive\" name=\"" << getPrimitiveTypeName(obj->primitive->getType()) << "\">\n";
 
         // Write color information (assuming diffuse color for simplicity)
-        xml << "<diffuse r=\"" << obj.red / 255.0f
-            << "\" g=\"" << obj.green / 255.0f
-            << "\" b=\"" << obj.blue / 255.0f << "\"/>\n";
+        xml << "<diffuse r=\"" << obj->red / 255.0f
+            << "\" g=\"" << obj->green / 255.0f
+            << "\" b=\"" << obj->blue / 255.0f << "\"/>\n";
 
         xml << "</object>\n";
 
@@ -611,9 +495,7 @@ static void writeSceneToXML() {
     } else {
         std::cerr << "Error: Could not open file " << filename << " for writing.\n";
     }
-
 }
-
 
 static void addShapeCB(Fl_Widget* w, void* userdata){
     MyAppWindow* window = (MyAppWindow*)userdata;
@@ -639,7 +521,7 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
         switch (selected) {
             case 0: // Cube
                 printf("Selected Cube\n");
-				appWin->canvas->setShape(SHAPE_CUBE);
+                appWin->canvas->setShape(SHAPE_CUBE);
                 break;
             case 1: // Sphere
                 printf("Selected Sphere\n");
@@ -653,7 +535,6 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
                 printf("Selected Cone\n");
                 appWin->canvas->setShape(SHAPE_CONE);
                 break;
-         
         }
         win->hide(); 
     }, shapeWindow);
@@ -668,355 +549,262 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
 }
 
 MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
-	begin();
-	// OpenGL window
+    begin();
+    // OpenGL window
+    // Adjusted to match pointer-based objectList
+    canvas = new MyGLCanvas(10, 10, w() - 320, h() - 20);
 
-	canvas = new MyGLCanvas(10, 10, w() - 320, h() - 20);
+    Fl_Pack* pack = new Fl_Pack(w() - 310, 30, 150, h() - 40, "Controls"); // Adjusted height
+    pack->box(FL_DOWN_FRAME);
+    pack->type(Fl_Pack::VERTICAL);
+    pack->spacing(10); // Reduced spacing for better layout
+    pack->begin();
 
-	Fl_Pack* pack = new Fl_Pack(w() - 310, 30, 150, h(), "");
-	pack->box(FL_DOWN_FRAME);
-	pack->type(Fl_Pack::VERTICAL);
-	pack->spacing(30);
-	pack->begin();
+    addChildButton = new Fl_Button(10, 10, pack->w() - 20, 30, "Add Child");
+    addChildButton->callback(addChildCB, (void*)this);
 
-	addChildButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Add Child");
-	addChildButton->callback(addChildCB, (void*)this);
-
-
-    Fl_Pack* loadPack = new Fl_Pack(w() - 100, 30, 100, h(), "Reset");
-    loadPack->box(FL_DOWN_FRAME);
-    loadPack->labelfont(1);
-    loadPack->type(Fl_Pack::VERTICAL);
-    loadPack->spacing(0);
-    loadPack->begin();
-
-    resetSceneButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Reset Scene");
+    // Reset Scene Button
+    resetSceneButton = new Fl_Button(10, 50, pack->w() - 20, 30, "Reset Scene");
     resetSceneButton->callback(resetSceneCB, (void*)this);
 
-    loadPack->end();
+    // Wireframe Toggle
+    wireButton = new Fl_Check_Button(10, 90, pack->w() - 20, 30, "Wireframe");
+    wireButton->callback(toggleCB, (void*)(&(canvas->wireframe)));
+    wireButton->value(canvas->wireframe);
 
-	// render options
-    Fl_Pack *buttonsPack = new Fl_Pack(w() - 100, 30, 100, h(), "Draw Objects");
-    buttonsPack->box(FL_DOWN_FRAME);
-    buttonsPack->labelfont(1);
-    buttonsPack->type(Fl_Pack::VERTICAL);
-    buttonsPack->spacing(0);
-    buttonsPack->begin();
-
-	wireButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Wireframe");
-	wireButton->callback(toggleCB, (void*)(&(canvas->wireframe)));
-	wireButton->value(canvas->wireframe);
-
-    // smoothButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Smooth");
-    // smoothButton->value(canvas->smooth);
-    // smoothButton->callback(toggleCB, (void *)(&(canvas->smooth)));
-
-    // fillButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Fill");
-    // fillButton->value(canvas->fill);
-    // fillButton->callback(toggleCB, (void *)(&(canvas->fill)));
-
-    // normalButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Show Normal");
-    // normalButton->value(canvas->normal);
-    // normalButton->callback(toggleCB, (void *)(&(canvas->normal)));
-
-	// 	renderButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Render!");
-	// 	renderButton->callback(renderCB, (void*)this);
-		
-	// 	isectButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "isectOnly");
-	// 	isectButton->value(canvas->isectOnly);
-	// 	isectButton->callback(toggleCB, (void*)(&(canvas->isectOnly)));
-
-		// maxRecursionDepthSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-		// maxRecursionDepthSlider->align(FL_ALIGN_TOP);
-		// maxRecursionDepthSlider->type(FL_HOR_SLIDER);
-		// maxRecursionDepthSlider->step(1);
-		// maxRecursionDepthSlider->bounds(0, 5);
-		// maxRecursionDepthSlider->value(canvas->maxRecursionDepth);
-		// maxRecursionDepthSlider->callback(maxRecursionDepthSliderCB);
-
-    buttonsPack->end();
-
-
-
-	// options for drawing primitive
-	Fl_Pack* radioPack = new Fl_Pack(w() - 100, 30, 100, h(), "Shape");
-	
-	addShapeButton = new Fl_Button(0, 0, pack->w() - 20, 25, "Select Shape");
+    // Add Shape Button
+    addShapeButton = new Fl_Button(10, 130, pack->w() - 20, 30, "Add Shape");
     addShapeButton->callback(addShapeCB, (void*)this);	// primitive properties
-	//slider for controlling number of segments in X
-	Fl_Box* segmentsXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "SegmentsX");
-	segmentsXSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	segmentsXSlider->align(FL_ALIGN_TOP);
-	segmentsXSlider->type(FL_HOR_SLIDER);
-	segmentsXSlider->bounds(3, 60);
-	segmentsXSlider->step(1);
-	segmentsXSlider->value(canvas->segmentsX);
-	segmentsXSlider->callback(segmentsCB, (void*)(&(canvas->segmentsX)));
 
+    // SegmentsX Slider
+    Fl_Box* segmentsXTextbox = new Fl_Box(10, 170, pack->w() - 20, 20, "Segments X:");
+    segmentsXTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    segmentsXSlider = new Fl_Value_Slider(10, 200, pack->w() - 20, 20, "");
+    segmentsXSlider->align(FL_ALIGN_TOP);
+    segmentsXSlider->type(FL_HOR_SLIDER);
+    segmentsXSlider->bounds(3, 60);
+    segmentsXSlider->step(1);
+    segmentsXSlider->value(canvas->segmentsX);
+    segmentsXSlider->callback(segmentsCB, (void*)(&(canvas->segmentsX)));
 
-	//slider for controlling number of segments in Y
-	Fl_Box* segmentsYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "SegmentsY");
-	segmentsYSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	segmentsYSlider->align(FL_ALIGN_TOP);
-	segmentsYSlider->type(FL_HOR_SLIDER);
-	segmentsYSlider->bounds(3, 60);
-	segmentsYSlider->step(1);
-	segmentsYSlider->value(canvas->segmentsY);
-	segmentsYSlider->callback(segmentsCB, (void*)(&(canvas->segmentsY)));
+    // SegmentsY Slider
+    Fl_Box* segmentsYTextbox = new Fl_Box(10, 230, pack->w() - 20, 20, "Segments Y:");
+    segmentsYTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    segmentsYSlider = new Fl_Value_Slider(10, 260, pack->w() - 20, 20, "");
+    segmentsYSlider->align(FL_ALIGN_TOP);
+    segmentsYSlider->type(FL_HOR_SLIDER);
+    segmentsYSlider->bounds(3, 60);
+    segmentsYSlider->step(1);
+    segmentsYSlider->value(canvas->segmentsY);
+    segmentsYSlider->callback(segmentsCB, (void*)(&(canvas->segmentsY)));
 
-    Fl_Box* redBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Red");
-	rSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	rSlider->align(FL_ALIGN_TOP);
-	rSlider->type(FL_HOR_SLIDER);
-	rSlider->bounds(0, 255);
-	rSlider->step(1);
-	rSlider->value(255); // Default value set to 255
-	rSlider->callback(redCB);
+    // Color Sliders
+    // Red Slider
+    Fl_Box* redBox = new Fl_Box(10, 290, pack->w() - 20, 20, "Red:");
+    redBox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    rSlider = new Fl_Value_Slider(10, 320, pack->w() - 20, 20, "");
+    rSlider->align(FL_ALIGN_TOP);
+    rSlider->type(FL_HOR_SLIDER);
+    rSlider->bounds(0, 255);
+    rSlider->step(1);
+    rSlider->value(255); // Default value set to 255
+    rSlider->callback(redCB);
 
-    Fl_Box* greenBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Green");
-    gSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	gSlider->align(FL_ALIGN_TOP);
-	gSlider->type(FL_HOR_SLIDER);
-	gSlider->bounds(0, 255);
-	gSlider->step(1);
-	gSlider->value(255); // Default value set to 255
-	gSlider->callback(greenCB);
+    // Green Slider
+    Fl_Box* greenBox = new Fl_Box(10, 350, pack->w() - 20, 20, "Green:");
+    greenBox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    gSlider = new Fl_Value_Slider(10, 380, pack->w() - 20, 20, "");
+    gSlider->align(FL_ALIGN_TOP);
+    gSlider->type(FL_HOR_SLIDER);
+    gSlider->bounds(0, 255);
+    gSlider->step(1);
+    gSlider->value(255); // Default value set to 255
+    gSlider->callback(greenCB);
 
-    Fl_Box* blueBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Blue");
-    bSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	bSlider->align(FL_ALIGN_TOP);
-	bSlider->type(FL_HOR_SLIDER);
-	bSlider->bounds(0, 255);
-	bSlider->step(1);
-	bSlider->value(255); // Default value set to 255
-	bSlider->callback(blueCB);
+    // Blue Slider
+    Fl_Box* blueBox = new Fl_Box(10, 410, pack->w() - 20, 20, "Blue:");
+    blueBox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    bSlider = new Fl_Value_Slider(10, 440, pack->w() - 20, 20, "");
+    bSlider->align(FL_ALIGN_TOP);
+    bSlider->type(FL_HOR_SLIDER);
+    bSlider->bounds(0, 255);
+    bSlider->step(1);
+    bSlider->value(255); // Default value set to 255
+    bSlider->callback(blueCB);
 
-   
+    // Create XML Button
+    drawButton = new Fl_Button(10, 470, pack->w() - 20, 30, "Create XML");
+    drawButton->callback((Fl_Callback*)writeSceneToXML);
 
-	drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Create XML");
-	drawButton->callback((Fl_Callback*)writeSceneToXML);
-    radioPack->end();
+    pack->end();
 
-	pack->end();
-	// second column slider
-	Fl_Pack* packCol2 = new Fl_Pack(w() - 155, 30, 150, h(), "");
-	packCol2->box(FL_DOWN_FRAME);
-	packCol2->type(Fl_Pack::VERTICAL);
-	packCol2->spacing(30);
-	packCol2->begin();
+    // Second Column Pack for Orientation and Camera Controls
+    Fl_Pack* packCol2 = new Fl_Pack(w() - 155, 30, 150, h() - 40, "Transformations");
+    packCol2->box(FL_DOWN_FRAME);
+    packCol2->type(Fl_Pack::VERTICAL);
+    packCol2->spacing(10); // Reduced spacing for better layout
+    packCol2->begin();
 
-	Fl_Pack *objectPack = new Fl_Pack(w() - 100, 30, 100, h(), "Orientation");
-	objectPack->box(FL_DOWN_FRAME);
-	objectPack->labelfont(1);
-	objectPack->type(Fl_Pack::VERTICAL);
-	objectPack->spacing(0);
-	objectPack->begin();
+    // Orientation Pack
+    Fl_Pack* objectPack = new Fl_Pack(10, 10, packCol2->w() - 20, 200, "Orientation");
+    objectPack->box(FL_DOWN_FRAME);
+    objectPack->labelfont(1);
+    objectPack->type(Fl_Pack::VERTICAL);
+    objectPack->spacing(5);
+    objectPack->begin();
 
-	Fl_Box *rotXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateX");
-	rotXSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	rotXSlider->align(FL_ALIGN_TOP);
-	rotXSlider->type(FL_HOR_SLIDER);
-	rotXSlider->bounds(-359, 359);
-	rotXSlider->step(1);
-	rotXSlider->value(canvas->rotVec.x);
-	// rotXSlider->callback(rotationSliderCB,(void *)(&(canvas->rotVec.x)));
-	rotXSlider->callback(rotationSliderCB, (void*)this);
+    // Rotate X Slider
+    Fl_Box *rotXTextbox = new Fl_Box(10, 10, objectPack->w() - 20, 20, "Rotate X:");
+    rotXTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    rotXSlider = new Fl_Value_Slider(10, 40, objectPack->w() - 20, 20, "");
+    rotXSlider->align(FL_ALIGN_TOP);
+    rotXSlider->type(FL_HOR_SLIDER);
+    rotXSlider->bounds(-359, 359);
+    rotXSlider->step(1);
+    rotXSlider->value(canvas->rotVec.x);
+    rotXSlider->callback(rotationSliderCB, (void*)this);
 
-	Fl_Box *rotYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateY");
-	rotYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	rotYSlider->align(FL_ALIGN_TOP);
-	rotYSlider->type(FL_HOR_SLIDER);
-	rotYSlider->bounds(-359, 359);
-	rotYSlider->step(1);
-	rotYSlider->value(canvas->rotVec.y);
-	// rotYSlider->callback(rotationSliderCB, (void *)(&(canvas->rotVec.y)));
-	rotYSlider->callback(rotationSliderCB, (void*)this);
+    // Rotate Y Slider
+    Fl_Box *rotYTextbox = new Fl_Box(10, 70, objectPack->w() - 20, 20, "Rotate Y:");
+    rotYTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    rotYSlider = new Fl_Value_Slider(10, 100, objectPack->w() - 20, 20, "");
+    rotYSlider->align(FL_ALIGN_TOP);
+    rotYSlider->type(FL_HOR_SLIDER);
+    rotYSlider->bounds(-359, 359);
+    rotYSlider->step(1);
+    rotYSlider->value(canvas->rotVec.y);
+    rotYSlider->callback(rotationSliderCB, (void*)this);
 
-	Fl_Box *rotZTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateZ");
-	rotZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	rotZSlider->align(FL_ALIGN_TOP);
-	rotZSlider->type(FL_HOR_SLIDER);
-	rotZSlider->bounds(-359, 359);
-	rotZSlider->step(1);
-	rotZSlider->value(canvas->rotVec.z);
-	// rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
-	rotZSlider->callback(rotationSliderCB, (void*)this);
+    // Rotate Z Slider
+    Fl_Box *rotZTextbox = new Fl_Box(10, 130, objectPack->w() - 20, 20, "Rotate Z:");
+    rotZTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    rotZSlider = new Fl_Value_Slider(10, 160, objectPack->w() - 20, 20, "");
+    rotZSlider->align(FL_ALIGN_TOP);
+    rotZSlider->type(FL_HOR_SLIDER);
+    rotZSlider->bounds(-359, 359);
+    rotZSlider->step(1);
+    rotZSlider->value(canvas->rotVec.z);
+    rotZSlider->callback(rotationSliderCB, (void*)this);
 
-	Fl_Box *scaleTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "UniformScale");
-	scaleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	scaleSlider->align(FL_ALIGN_TOP);
-	scaleSlider->type(FL_HOR_SLIDER);
-	scaleSlider->bounds(0.1, 2);
-	scaleSlider->value(canvas->scale);
-	// scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
-	scaleSlider->callback(scaleSliderCB, (void*)this);
+    // Uniform Scale Slider
+    Fl_Box *scaleTextbox = new Fl_Box(10, 190, objectPack->w() - 20, 20, "Uniform Scale:");
+    scaleTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    scaleSlider = new Fl_Value_Slider(10, 220, objectPack->w() - 20, 20, "");
+    scaleSlider->align(FL_ALIGN_TOP);
+    scaleSlider->type(FL_HOR_SLIDER);
+    scaleSlider->bounds(0.1, 2.0);
+    scaleSlider->step(0.1);
+    scaleSlider->value(canvas->scale); // Assuming uniform scale
+    scaleSlider->callback(scaleSliderCB, (void*)this);
 
-
-	uniformScaleToggle = new Fl_Check_Button(0, 0, pack->w() - 10,10 , "Enable Uniform Scale");
+    // Uniform Scale Toggle
+    uniformScaleToggle = new Fl_Check_Button(10, 250, objectPack->w() - 20, 20, "Enable Uniform Scale");
     uniformScaleToggle->callback(uniformScaleToggleCB, (void *)this);
 
-	Fl_Box *scaleXBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale X");
-    scaleXSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    // Scale X Slider
+    Fl_Box *scaleXBox = new Fl_Box(10, 280, objectPack->w() - 20, 20, "Scale X:");
+    scaleXBox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    scaleXSlider = new Fl_Value_Slider(10, 310, objectPack->w() - 20, 20, "");
     scaleXSlider->align(FL_ALIGN_TOP);
     scaleXSlider->type(FL_HOR_SLIDER);
-    scaleXSlider->bounds(0.1, 5);
+    scaleXSlider->bounds(0.1, 5.0);
+    scaleXSlider->step(0.1);
     scaleXSlider->value(1.0);
     scaleXSlider->callback(scaleSliderCB, (void *)this);
 
-    Fl_Box *scaleYBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale Y");
-    scaleYSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    // Scale Y Slider
+    Fl_Box *scaleYBox = new Fl_Box(10, 340, objectPack->w() - 20, 20, "Scale Y:");
+    scaleYBox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    scaleYSlider = new Fl_Value_Slider(10, 370, objectPack->w() - 20, 20, "");
     scaleYSlider->align(FL_ALIGN_TOP);
     scaleYSlider->type(FL_HOR_SLIDER);
-    scaleYSlider->bounds(0.1, 5);
+    scaleYSlider->bounds(0.1, 5.0);
+    scaleYSlider->step(0.1);
     scaleYSlider->value(1.0);
     scaleYSlider->callback(scaleSliderCB, (void *)this);
 
-    Fl_Box *scaleZBox = new Fl_Box(0, 0, pack->w() - 20, 20, "Scale Z");
-    scaleZSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+    // Scale Z Slider
+    Fl_Box *scaleZBox = new Fl_Box(10, 400, objectPack->w() - 20, 20, "Scale Z:");
+    scaleZBox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    scaleZSlider = new Fl_Value_Slider(10, 430, objectPack->w() - 20, 20, "");
     scaleZSlider->align(FL_ALIGN_TOP);
     scaleZSlider->type(FL_HOR_SLIDER);
-    scaleZSlider->bounds(0.1, 5);
+    scaleZSlider->bounds(0.1, 5.0);
+    scaleZSlider->step(0.1);
     scaleZSlider->value(1.0);
     scaleZSlider->callback(scaleSliderCB, (void *)this);
-	objectPack->end();
-	
-	// pack->end();
 
+    objectPack->end();
 
+    // Camera Pack
+    Fl_Pack *cameraPack = new Fl_Pack(10, 460, packCol2->w() - 20, 200, "Camera");
+    cameraPack->box(FL_DOWN_FRAME);
+    cameraPack->labelfont(1);
+    cameraPack->type(Fl_Pack::VERTICAL);
+    cameraPack->spacing(5);
+    cameraPack->begin();
 
+    // Camera Rotate U Slider
+    Fl_Box *CamerarotXTextbox = new Fl_Box(10, 10, cameraPack->w() - 20, 20, "Camera U:");
+    CamerarotXTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    CamerarotXSlider = new Fl_Value_Slider(10, 40, cameraPack->w() - 20, 20, "");
+    CamerarotXSlider->align(FL_ALIGN_TOP);
+    CamerarotXSlider->type(FL_HOR_SLIDER);
+    CamerarotXSlider->bounds(-359, 359);
+    CamerarotXSlider->step(1);
+    CamerarotXSlider->value(canvas->camera.rotU);
+    CamerarotXSlider->callback(cameraRotateCB, (void*)this);
 
-  	scaleSlider->deactivate();
-    scaleXSlider->activate();
-    scaleYSlider->activate();
-    scaleZSlider->activate();
-	uniformScaleToggle->value(0);
-	Fl_Pack *cameraPack = new Fl_Pack(w() - 100, 30, 100, h(), "Camera");
-	cameraPack->box(FL_DOWN_FRAME);
-	cameraPack->labelfont(1);
-	cameraPack->type(Fl_Pack::VERTICAL);
-	cameraPack->spacing(0);
-	cameraPack->begin();
+    // Camera Rotate V Slider
+    Fl_Box *CamerarotYTextbox = new Fl_Box(10, 70, cameraPack->w() - 20, 20, "Camera V:");
+    CamerarotYTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    CamerarotYSlider = new Fl_Value_Slider(10, 100, cameraPack->w() - 20, 20, "");
+    CamerarotYSlider->align(FL_ALIGN_TOP);
+    CamerarotYSlider->type(FL_HOR_SLIDER);
+    CamerarotYSlider->bounds(-359, 359);
+    CamerarotYSlider->step(1);
+    CamerarotYSlider->value(canvas->camera.rotV);
+    CamerarotYSlider->callback(cameraRotateCB, (void*)this);
 
-	Fl_Box *CamerarotXTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera U");
-	CamerarotXSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	CamerarotXSlider->align(FL_ALIGN_TOP);
-	CamerarotXSlider->type(FL_HOR_SLIDER);
-	CamerarotXSlider->bounds(-359, 359);
-	CamerarotXSlider->step(1);
-	CamerarotXSlider->value(canvas->camera.rotU);
-	// rotXSlider->callback(rotationSliderCB,(void *)(&(canvas->rotVec.x)));
-	CamerarotXSlider->callback(cameraRotateCB, (void*)this);
+    // Camera Rotate W Slider
+    Fl_Box *CamerarotZTextbox = new Fl_Box(10, 130, cameraPack->w() - 20, 20, "Camera W:");
+    CamerarotZTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    CamerarotZSlider = new Fl_Value_Slider(10, 160, cameraPack->w() - 20, 20, "");
+    CamerarotZSlider->align(FL_ALIGN_TOP);
+    CamerarotZSlider->type(FL_HOR_SLIDER);
+    CamerarotZSlider->bounds(-359, 359);
+    CamerarotZSlider->step(1);
+    CamerarotZSlider->value(canvas->camera.rotW);
+    CamerarotZSlider->callback(cameraRotateCB, (void*)this);
 
-	Fl_Box *CamerarotYTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera V");
-	CamerarotYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	CamerarotYSlider->align(FL_ALIGN_TOP);
-	CamerarotYSlider->type(FL_HOR_SLIDER);
-	CamerarotYSlider->bounds(-359, 359);
-	CamerarotYSlider->step(1);
-	CamerarotYSlider->value(canvas->camera.rotV);
-	// rotYSlider->callback(rotationSliderCB, (void *)(&(canvas->rotVec.y)));
-	CamerarotYSlider->callback(cameraRotateCB, (void*)this);
+    // View Angle Slider
+    Fl_Box *viewAngelTextbox = new Fl_Box(10, 190, cameraPack->w() - 20, 20, "View Angle:");
+    viewAngelTextbox->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+    angleSlider = new Fl_Value_Slider(10, 220, cameraPack->w() - 20, 20, "");
+    angleSlider->align(FL_ALIGN_TOP);
+    angleSlider->type(FL_HOR_SLIDER);
+    angleSlider->bounds(1, 179);
+    angleSlider->step(1);
+    angleSlider->value(canvas->camera.getViewAngle());
+    angleSlider->callback(angleSliderCB, (void*)this);
 
-	Fl_Box *CamerarotZTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "Camera W");
-	CamerarotZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	CamerarotZSlider->align(FL_ALIGN_TOP);
-	CamerarotZSlider->type(FL_HOR_SLIDER);
-	CamerarotZSlider->bounds(-359, 359);
-	CamerarotZSlider->step(1);
-	CamerarotZSlider->value(canvas->camera.rotW);
-	// rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
-	CamerarotZSlider->callback(cameraRotateCB, (void*)this);
-	
-
-	// Fl_Box *CamerarotUTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move up");
-	// moveUSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	// moveUSlider->align(FL_ALIGN_TOP);
-	// moveUSlider->type(FL_HOR_SLIDER);
-	// moveUSlider->bounds(1, 179);
-	// moveUSlider->step(1);
-	// // moveUSlider->value(canvas->camera.rotU);
-	// // rotXSlider->callback(rotationSliderCB,(void *)(&(canvas->rotVec.x)));
-	// moveUSlider->callback(moveCameraCB, (void*)this);
-
-	// Fl_Box *CamerarotDTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move down");
-	// moveDSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	// moveDSlider->align(FL_ALIGN_TOP);
-	// moveDSlider->type(FL_HOR_SLIDER);
-	// moveDSlider->bounds(1, 179);
-	// moveDSlider->step(1);
-	// // moveDSlider->value(canvas->camera.rotV);
-	// // rotYSlider->callback(rotationSliderCB, (void *)(&(canvas->rotVec.y)));
-	// moveDSlider->callback(moveCameraCB, (void*)this);
-
-	// Fl_Box *CamerarotRTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move right");
-	// moveRSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	// moveRSlider->align(FL_ALIGN_TOP);
-	// moveRSlider->type(FL_HOR_SLIDER);
-	// moveRSlider->bounds(-359, 359);
-	// moveRSlider->step(1);
-	// // moveRSlider->value(canvas->camera.rotW);
-	// // rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
-	// moveRSlider->callback(moveCameraCB, (void*)this);
-
-
-	// Fl_Box *CamerarotLTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move left");
-	// moveLSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	// moveLSlider->align(FL_ALIGN_TOP);
-	// moveLSlider->type(FL_HOR_SLIDER);
-	// moveLSlider->bounds(-359, 359);
-	// moveLSlider->step(1);
-	// // CamerarotZSlider->value(canvas->camera.rotW);
-	// // rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
-	// moveLSlider->callback(moveCameraCB, (void*)this);
-
-	// Fl_Box *CamerarotRTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move XY");
-	// moveXYSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	// moveXYSlider->align(FL_ALIGN_TOP);
-	// moveXYSlider->type(FL_HOR_SLIDER);
-	// moveXYSlider->bounds(-359, 359);
-	// moveXYSlider->step(1);
-	// // moveRSlider->value(canvas->camera.rotW);
-	// // rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
-	// moveXYSlider->callback(moveCameraCB, (void*)this);
-
-
-	// Fl_Box *CamerarotLTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "move YZ");
-	// moveYZSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	// moveYZSlider->align(FL_ALIGN_TOP);
-	// moveYZSlider->type(FL_HOR_SLIDER);
-	// moveYZSlider->bounds(1, 179);
-	// moveYZSlider->step(1);
-	// // CamerarotZSlider->value(canvas->camera.rotW);
-	// // rotZSlider->callback(rotationSliderCB,,(void *)(&(canvas->rotVec.z)));
-	// moveYZSlider->callback(moveCameraCB, (void*)this);
-
-
-	Fl_Box *viewAngelTextbox = new Fl_Box(0, 0, pack->w() - 20, 20, "View Angel");
-	angleSlider          = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-	angleSlider->align(FL_ALIGN_TOP);
-	angleSlider->type(FL_HOR_SLIDER);
-	angleSlider->bounds(1, 179);
-	angleSlider->value(canvas->camera.viewAngle);
-	// scaleSlider->callback(sliderFloatCB, (void *)(&(canvas->scale)));
-	angleSlider->callback(angleSliderCB, (void*)this);
-	cameraPack->end();
-	packCol2->end();
-	pack -> end();
-
-	end();
+    cameraPack->end();
+    packCol2->end();
+    pack->end();
+    packCol2->end();
+    end();
 }
-
 
 /**************************************** main() ********************/
 int main(int argc, char **argv) {
-	glutInit(&argc, argv);
-	win = new MyAppWindow(900, 600, "Dragging Object");
-	win->resizable(win);
+    glutInit(&argc, argv);
+    win = new MyAppWindow(900, 600, "Dragging Object");
+    win->resizable(win->canvas); // Make the OpenGL canvas resizable
     // Set the callback to reflect the current value of selected object
-	win->canvas->onSelectionChanged = []() {
-		win->updateSelectedObject();
-	};
-	Fl::add_idle(MyAppWindow::idleCB);
-	win->show();
-	return(Fl::run());
+    win->canvas->onSelectionChanged = []() {
+        win->updateSelectedObject();
+    };
+    Fl::add_idle(MyAppWindow::idleCB);
+    win->show();
+    return(Fl::run());
 }
