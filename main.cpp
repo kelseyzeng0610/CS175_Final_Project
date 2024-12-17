@@ -53,6 +53,8 @@ public:
     Fl_Slider *moveXYSlider;
     Fl_Slider *moveYZSlider;
 
+	Fl_Button* deleteButton;
+
     Fl_Slider *scaleXSlider;
     Fl_Slider *scaleYSlider;
     Fl_Slider *scaleZSlider;
@@ -166,6 +168,11 @@ private:
         win->canvas->resetScene();
         win->canvas->redraw();
     }
+	static void delete_button_callback(Fl_Widget* w, void* data) {
+		win->canvas->deleteSelectedObject();
+    
+}
+
 
     static void redCB(Fl_Widget* w, void* userdata) {
         int value = ((Fl_Slider*)w)->value();
@@ -562,6 +569,10 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 
     addChildButton = new Fl_Button(10, 10, pack->w() - 20, 30, "Add Child");
     addChildButton->callback(addChildCB, (void*)this);
+
+	deleteButton = new Fl_Button(10, 50, pack->w() - 20, 30, "Delete Object");
+	deleteButton->callback(delete_button_callback, (void*)this);
+
 
     // Reset Scene Button
     resetSceneButton = new Fl_Button(10, 50, pack->w() - 20, 30, "Reset Scene");

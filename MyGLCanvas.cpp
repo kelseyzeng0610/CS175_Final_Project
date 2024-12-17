@@ -606,6 +606,30 @@ void MyGLCanvas::resetScene() {
 }
 
 
+void MyGLCanvas::deleteSelectedObject() {
+    if (selectedObjId == -1) {
+        fl_message("No object is selected for deletion.");
+        return;
+    }
+    auto it = std::find_if(objectList.begin(), objectList.end(),
+                           [this](ObjectNode* obj) { return obj->id == this->selectedObjId; });
+
+    if (it != objectList.end()) {
+        ObjectNode* obj = *it;
+        objectList.erase(it);
+        delete obj;
+        selectedObjId = -1;
+        redraw();
+    }
+
+    if (onSelectionChanged) {
+        onSelectionChanged();
+    }
+    
+}
+
+ 
+    
 
 void MyGLCanvas::setShape(OBJ_TYPE type, bool isChild) {
     objType = type;

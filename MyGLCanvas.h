@@ -4,6 +4,7 @@
 #define MYGLCANVAS_H
 
 #include <FL/gl.h>
+#include <FL/fl_ask.H>
 #include <FL/glut.h>
 #include <FL/glu.h>
 #include <glm/glm.hpp>
@@ -108,6 +109,7 @@ MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	void updateCamera(int width, int height);
 
 	void drawNode(ObjectNode* node, glm::mat4 parent_transform);
+	void deleteSelectedObject();
 
 
 
@@ -148,6 +150,7 @@ private:
 	std::vector<double> intersectWithCube(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 	std::vector<double> intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 	std::vector<double> intersectWithCone(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
+	
 	// void storeObjects(SceneNode* node, glm::mat4 parent_transform);
 	// void setpixel(GLubyte* buf, int x, int y, int r, int g, int b);
 	// void getClosestT();
