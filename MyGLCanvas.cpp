@@ -140,16 +140,16 @@ double MyGLCanvas::intersect(ObjectNode* obj, glm::vec3 eyePointP, glm::vec3 ray
     // Intersection test based on primitive type
     switch (obj->primitive->getType()) {
         case SHAPE_CUBE:
-            results = intersectWithCube(p, d, glm::mat4(1.0f));  // Already in object space
+            results = intersectWithCube(p, d, glm::mat4(1.0f));  
             break;
         case SHAPE_SPHERE:
-            results = intersectWithSphere(p, d, glm::mat4(1.0f)); // Already in object space
+            results = intersectWithSphere(p, d, glm::mat4(1.0f)); 
             break;
         case SHAPE_CYLINDER:
-            results = intersectWithCylinder(p, d, glm::mat4(1.0f)); // Already in object space
+            results = intersectWithCylinder(p, d, glm::mat4(1.0f)); 
             break;
         case SHAPE_CONE:
-            results = intersectWithCone(p, d, glm::mat4(1.0f)); // Already in object space
+            results = intersectWithCone(p, d, glm::mat4(1.0f)); 
             break;
         default:
             break;
@@ -365,7 +365,7 @@ void MyGLCanvas::testObjectIntersection(ObjectNode* node, glm::mat4 parentTransf
         }
     }
 
-    // Recursively test children
+   
     for (ObjectNode* child : node->children) {
         testObjectIntersection(child, worldTransform, eyePoint, rayDir, closestObj, closestT);
     }
@@ -469,10 +469,10 @@ int MyGLCanvas::handle(int e)
                 if (t >= 0) {
                     glm::vec3 newIntersection = eyePoint + t * rayDir;
 
-                    // Calculate the offset in world space
+                    
                     glm::vec3 offset = newIntersection - oldIsectPoint;
 
-                    // Apply the offset to the object's translation
+                   
                     node->translate += offset;
 
                     
@@ -625,12 +625,11 @@ void MyGLCanvas::deleteSelectedObject() {
     if (onSelectionChanged) {
         onSelectionChanged();
     }
-    
+
 }
 
  
-    
-
+  
 void MyGLCanvas::setShape(OBJ_TYPE type, bool isChild) {
     objType = type;
 
