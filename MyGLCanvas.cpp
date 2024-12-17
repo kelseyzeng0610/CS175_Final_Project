@@ -8,6 +8,7 @@ int Shape::m_segmentsY;
 int Shape::lastIndex;
 std::vector<std::array<float, 3>> Shape::m_points;
 std::unordered_map<int, glm::vec3> Shape::m_normals;
+const double EPSILON = 1e-8;
 
 // Struct for storing each object in the scenegraph described by an xml file
 std::vector<SceneObject> sceneObjects;
@@ -681,132 +682,165 @@ void MyGLCanvas::setSegments() {
 // Logic derived from lab04
 std::vector<double> MyGLCanvas::intersectWithSphere(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
 {
-  // Transform ray and eye point to object space
-  glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
-  glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
+    
+    glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
+    glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f); 
 
-  glm::vec3 p = glm::vec3(eyePointPO);
-  glm::vec3 d = glm::normalize(glm::vec3(rayVO));
+   
+    glm::vec3 p = glm::vec3(eyePointPO);
+    glm::vec3 d = glm::normalize(glm::vec3(rayVO));
 
-  double A = glm::dot(glm::vec3(d), glm::vec3(d));
-  double B = 2.0f * glm::dot(glm::vec3(d), glm::vec3(p));
-  double C = glm::dot(glm::vec3(p), glm::vec3(p)) - 0.25;
+    
+    std::vector<double> results;
 
-  double discriminant = (B * B) - (4.0 * A * C);
 
-  std::vector<double> results;
+    double radius = 0.5;
+    double radiusSq = radius * radius;
 
-  if (discriminant < 0)
-  {
+  
+    double A = glm::dot(d, d); 
+    double B = 2.0 * glm::dot(d, p);
+    double C = glm::dot(p, p) - radiusSq;
+
+    // Compute the discriminant
+    double discriminant = (B * B) - (4.0 * A * C);
+
+    // Handle cases based on the discriminant
+    if (discriminant < -EPSILON)
+    {
+       
+        return results;
+    }
+    else if (std::fabs(discriminant) < EPSILON)
+    {
+   
+        double t = -B / (2.0 * A);
+        if (t > EPSILON)
+        {
+            results.push_back(t);
+        }
+        
+    }
+    else
+    {
+      
+        double sqrtDiscriminant = std::sqrt(discriminant);
+
+        // Compute both roots
+        double t1 = (-B - sqrtDiscriminant) / (2.0 * A);
+        double t2 = (-B + sqrtDiscriminant) / (2.0 * A);
+
+        
+        if (t1 > EPSILON)
+        {
+            results.push_back(t1);
+        }
+        if (t2 > EPSILON && std::fabs(t2 - t1) > EPSILON)
+        {
+            results.push_back(t2);
+        }
+    }
+
+
+    std::sort(results.begin(), results.end());
+
     return results;
-  }
-
-  // Calculate both intersection points
-  double t1 = (-B - sqrt(discriminant)) / (2.0 * A);
-  double t2 = (-B + sqrt(discriminant)) / (2.0 * A);
-
-  if (t1 > 0) results.push_back(t1);
-  if (t2 > 0) results.push_back(t2);
-
-  return results;
 }
 
 std::vector<double> MyGLCanvas::intersectWithCube(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
 {
+    
+    glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
+    glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f); 
+
   
-  glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
-  glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
+    glm::vec3 p = glm::vec3(eyePointPO);
+    glm::vec3 d = glm::normalize(glm::vec3(rayVO));
 
-  glm::vec3 p = glm::vec3(eyePointPO);
-  glm::vec3 d = glm::normalize(glm::vec3(rayVO));
+   
+    std::vector<double> results;
 
-  double t_min = INFINITY;
-  glm::vec3 intersection;
+   
+    double cube_min = -0.5;
+    double cube_max = 0.5;
 
-  std::vector<double> results;
+   
+    double t_min = -std::numeric_limits<double>::infinity();
+    double t_max = std::numeric_limits<double>::infinity();
 
-  // Right face of cube, x = 0.5
-  if (d.x != 0)
-  {
-    double t_right = (0.5 - p.x) / d.x;
-    intersection = p + float(t_right) * d;
-    if (t_right > 0 &&
-        intersection.y >= -0.5 && intersection.y <= 0.5 &&
-        intersection.z >= -0.5 && intersection.z <= 0.5)
+  
+    double bounds[2] = { cube_min, cube_max };
+
+    
+    for (int i = 0; i < 3; ++i)
     {
-      results.push_back(t_right);
-    }
-  }
+        double origin = p[i];
+        double direction = d[i];
+        double slab_min = bounds[0];
+        double slab_max = bounds[1];
 
-  // Left face of cube, x = -0.5
-  if (d.x != 0)
-  {
-    double t_left = (-0.5 - p.x) / d.x;
-    intersection = p + float(t_left) * d;
-    if (t_left > 0 &&
-        intersection.y >= -0.5 && intersection.y <= 0.5 &&
-        intersection.z >= -0.5 && intersection.z <= 0.5)
+        if (std::fabs(direction) < EPSILON)
+        {
+            
+            if (origin < slab_min || origin > slab_max)
+            {
+                return results; 
+            }
+           
+        }
+        else
+        {
+            
+            double t1 = (slab_min - origin) / direction;
+            double t2 = (slab_max - origin) / direction;
+
+            
+            if (t1 > t2)
+            {
+                std::swap(t1, t2);
+            }
+
+            
+            if (t1 > t_min)
+            {
+                t_min = t1;
+            }
+            if (t2 < t_max)
+            {
+                t_max = t2;
+            }
+
+          
+            if (t_min > t_max)
+            {
+                return results; 
+            }
+        }
+    }
+
+    
+    if (t_max < EPSILON)
     {
-      results.push_back(t_left);
+       
+        return results; 
     }
-  }
 
-  // Top face of cube, y = 0.5
-  if (d.y != 0)
-  {
-    double t_top = (0.5 - p.y) / d.y;
-    intersection = p + float(t_top) * d;
-    if (t_top > 0 &&
-        intersection.x >= -0.5 && intersection.x <= 0.5 &&
-        intersection.z >= -0.5 && intersection.z <= 0.5)
+  
+    if (t_min > EPSILON)
     {
-      results.push_back(t_top);
+        results.push_back(t_min);
     }
-  }
 
-  // Bottom face of cube, y = -0.5
-  if (d.y != 0)
-  {
-    double t_bottom = (-0.5 - p.y) / d.y;
-    intersection = p + float(t_bottom) * d;
-    if (t_bottom > 0 &&
-        intersection.x >= -0.5 && intersection.x <= 0.5 &&
-        intersection.z >= -0.5 && intersection.z <= 0.5)
+    if (t_max > EPSILON && std::fabs(t_max - t_min) > EPSILON)
     {
-      results.push_back(t_bottom);
+        results.push_back(t_max);
     }
-  }
 
-  // Front face of cube, z = 0.5
-  if (d.z != 0)
-  {
-    double t_front = (0.5 - p.z) / d.z;
-    intersection = p + float(t_front) * d;
-    if (t_front > 0 &&
-        intersection.x >= -0.5 && intersection.x <= 0.5 &&
-        intersection.y >= -0.5 && intersection.y <= 0.5)
-    {
-      results.push_back(t_front);
-    }
-  }
+  
+    std::sort(results.begin(), results.end());
 
-  // Back face of cube, z = -0.5
-  if (d.z != 0)
-  {
-    double t_back = (-0.5 - p.z) / d.z;
-    intersection = p + float(t_back) * d;
-    if (t_back > 0 &&
-        intersection.x >= -0.5 && intersection.x <= 0.5 &&
-        intersection.y >= -0.5 && intersection.y <= 0.5)
-    {
-      results.push_back(t_back);
-    }
-  }
-
-  // Return smallest positive t here
-  return results;
+    return results;
 }
-
 
 void MyGLCanvas::addObject(OBJ_TYPE type, ObjectNode* parent) {
     ObjectNode* node = new ObjectNode();
@@ -844,130 +878,219 @@ void MyGLCanvas::addObject(OBJ_TYPE type, ObjectNode* parent) {
 
 std::vector<double> MyGLCanvas::intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
 {
-  // Transform ray and eye point to object space
-  glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
-  glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
 
-  glm::vec3 p = glm::vec3(eyePointPO);
-  glm::vec3 d = glm::normalize(glm::vec3(rayVO));
+    glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
+    glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f); 
 
-  double t_min = INFINITY;
 
-  // Expand (px + tdx)^2 + (pz + tdz)^2 = 0.25 to find A, B and C
-  double A = d.x * d.x + d.z * d.z;
-  double B = 2.0f * (p.x * d.x + p.z * d.z);
-  double C = p.x * p.x + p.z * p.z - 0.25;
+    glm::vec3 p = glm::vec3(eyePointPO);
+    glm::vec3 d = glm::normalize(glm::vec3(rayVO));
 
-  double discriminant = (B * B) - (4.0f * A * C);
+  
+    std::vector<double> results;
 
-  std::vector<double> results;
+    
+    double radius = 0.5;
+    double radiusSq = radius * radius;
+    double y_min = -0.5;
+    double y_max = 0.5;
 
-  if (discriminant >= 0 && A != 0)
-  {
-    double t1 = (-B - sqrt(discriminant)) / (2.0 * A);
-    double t2 = (-B + sqrt(discriminant)) / (2.0 * A);
+    
+    double A = d.x * d.x + d.z * d.z;
+    double B = 2.0 * (p.x * d.x + p.z * d.z);
+    double C = p.x * p.x + p.z * p.z - radiusSq;
 
-    // Check if intersection y value is between (-0.5, 0.5) before potentially setting new t_min
-    if (t1 > 0)
+    
+    double discriminant = B * B - 4.0 * A * C;
+
+    // if a is zero,indicating the ray is parallel to the cylinder's axis
+    if (std::fabs(A) < EPSILON)
     {
-      glm::vec3 intersection = p + float(t1) * d;
-      if (intersection.y >= -0.5f && intersection.y <= 0.5f)
-      {
-        results.push_back(t1);
-      }
+        if (std::fabs(B) < EPSILON)
+        {
+            // Both  a and b ; the ray is parallel to the cylinder's axis and outside the cylinder
+            // No valid intersection with the lateral surface
+        }
+        else
+        {
+         
+            double t = -C / B;
+            if (t > EPSILON)
+            {
+                glm::vec3 intersection = p + static_cast<float>(t) * d;
+             
+                if (intersection.y >= y_min && intersection.y <= y_max)
+                {
+                    results.push_back(t);
+                }
+            }
+        }
     }
-    if (t2 > 0)
+    else
     {
-      glm::vec3 intersection = p + float(t2) * d;
-      if (intersection.y >= -0.5f && intersection.y <= 0.5f)
-      {
-        results.push_back(t2);
-      }
+        if (discriminant >= 0.0)
+        {
+            double sqrtDiscriminant = std::sqrt(discriminant);
+
+            // Two possible solutions
+            double t1 = (-B - sqrtDiscriminant) / (2.0 * A);
+            double t2 = (-B + sqrtDiscriminant) / (2.0 * A);
+
+           
+            if (t1 > EPSILON)
+            {
+                glm::vec3 intersection1 = p + static_cast<float>(t1) * d;
+               
+                if (intersection1.y >= y_min && intersection1.y <= y_max)
+                {
+                    results.push_back(t1);
+                }
+            }
+
+            if (t2 > EPSILON && std::fabs(t2 - t1) > EPSILON)
+            {
+                glm::vec3 intersection2 = p + static_cast<float>(t2) * d;
+               
+                if (intersection2.y >= y_min && intersection2.y <= y_max)
+                {
+                    results.push_back(t2);
+                }
+            }
+        }
     }
-  }
 
-  // Check intersection of the two caps
-  if (d.y != 0)
-  {
-    double t_top = (0.5f - p.y) / d.y;
-    double t_bottom = (-0.5f - p.y) / d.y;
-
-    if (t_top > 0)
+    
+    auto checkCapIntersection = [&](double y_cap, double t_cap) -> void
     {
-      glm::vec3 intersection = p + float(t_top) * d;
-      if (intersection.x * intersection.x + intersection.z * intersection.z <= 0.25)
-      {
-        results.push_back(t_top);
-      }
-    }
+        if (t_cap > EPSILON)
+        {
+            glm::vec3 intersection = p + static_cast<float>(t_cap) * d;
+            // Check if the intersection point lies within the circular cap
+            if ((intersection.x * intersection.x + intersection.z * intersection.z) <= radiusSq)
+            {
+                results.push_back(t_cap);
+            }
+        }
+    };
 
-    if (t_bottom > 0)
+ 
+    if (std::fabs(d.y) > EPSILON)
     {
-      glm::vec3 intersection = p + float(t_bottom) * d;
-      if (intersection.x * intersection.x + intersection.z * intersection.z <= 0.25)
-      {
-        results.push_back(t_bottom);
-      }
-    }
-  }
+        double t_top = (y_max - p.y) / d.y;
+        checkCapIntersection(y_max, t_top);
 
-  return results;
+       
+        double t_bottom = (y_min - p.y) / d.y;
+        checkCapIntersection(y_min, t_bottom);
+    }
+
+   
+    std::sort(results.begin(), results.end());
+
+    return results;
 }
-
 std::vector<double> MyGLCanvas::intersectWithCone(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix)
 {
-  glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
-  glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
 
-  glm::vec3 p = glm::vec3(eyePointPO);
-  glm::vec3 d = glm::normalize(glm::vec3(rayVO));
+    glm::vec4 eyePointPO = transformMatrix * glm::vec4(eyePointP, 1.0f);
+    glm::vec4 rayVO = transformMatrix * glm::vec4(rayV, 0.0f);
 
-  double t_min = INFINITY;
+  
+    glm::vec3 p = glm::vec3(eyePointPO);
+    glm::vec3 d = glm::normalize(glm::vec3(rayVO));
 
-  double A = d.x * d.x + d.z * d.z - 0.25 * d.y * d.y;
-  double B = 2.0f * (p.x * d.x + p.z * d.z) + (0.25 - (0.5 * p.y)) * d.y;
-  double C = p.x * p.x + p.z * p.z - 0.25 * (0.5 - p.y) * (0.5 - p.y);
+    // Initialize a vector to store intersection t values
+    std::vector<double> results;
 
-  double discriminant = (B * B) - (4.0f * A * C);
 
-  std::vector<double> results;
+    double theta = M_PI / 4.0; 
+    double cosTheta = std::cos(theta);
+    double cosThetaSq = cosTheta * cosTheta;
+    double sinThetaSq = 1.0 - cosThetaSq;
 
-  if (discriminant >= 0 && A != 0)
-  {
-    double t1 = (-B - sqrt(discriminant)) / (2.0 * A);
-    double t2 = (-B + sqrt(discriminant)) / (2.0 * A);
+    
 
-    if (t1 > 0)
+    double d_dot_a = d.y; 
+    double p_dot_a = p.y;
+
+    double a = d.x * d.x + d.z * d.z - cosThetaSq * d.y * d.y;
+    double b = 2.0 * (p.x * d.x + p.z * d.z - cosThetaSq * p.y * d.y);
+    double c = p.x * p.x + p.z * p.z - cosThetaSq * p.y * p.y;
+
+   
+    double discriminant = b * b - 4.0 * a * c;
+
+    // Check if 'a' is near zero, indicating the ray is parallel to the cone's surface
+    if (std::fabs(a) < EPSILON)
     {
-      glm::vec3 intersection = p + float(t1) * d;
-      if (intersection.y >= -0.5f && intersection.y <= 0.5f)
-      {
-        results.push_back(t1);
-      }
+        if (std::fabs(b) < EPSILON)
+        {
+            // Both 'a' and 'b' are near zero; no valid intersection
+            // The ray lies on the surface of the cone or does not intersect
+        }
+        else
+        {
+            
+            double t = -c / b;
+            if (t > EPSILON)
+            {
+                glm::vec3 intersection = p + static_cast<float>(t) * d;
+                if (intersection.y >= -0.5f && intersection.y <= 0.5f)
+                {
+                    results.push_back(t);
+                }
+            }
+        }
     }
-    if (t2 > 0)
+    else
     {
-      glm::vec3 intersection = p + float(t2) * d;
-      if (intersection.y >= -0.5f && intersection.y <= 0.5f)
-      {
-        results.push_back(t2);
-      }
+        if (discriminant >= 0.0)
+        {
+            double sqrtDiscriminant = std::sqrt(discriminant);
+
+            double t1 = (-b - sqrtDiscriminant) / (2.0 * a);
+            double t2 = (-b + sqrtDiscriminant) / (2.0 * a);
+
+           
+            if (t1 > EPSILON)
+            {
+                glm::vec3 intersection1 = p + static_cast<float>(t1) * d;
+              
+                if (intersection1.y >= -0.5f && intersection1.y <= 0.5f)
+                {
+                    results.push_back(t1);
+                }
+            }
+
+            if (t2 > EPSILON && std::fabs(t2 - t1) > EPSILON)
+            {
+                glm::vec3 intersection2 = p + static_cast<float>(t2) * d;
+                
+                if (intersection2.y >= -0.5f && intersection2.y <= 0.5f)
+                {
+                    results.push_back(t2);
+                }
+            }
+        }
     }
-  }
 
-  if (d.y != 0)
-  {
-    double t_cap = (-0.5f - p.y) / d.y;
-
-    if (t_cap > 0)
+    
+    if (std::fabs(d.y) > EPSILON)
     {
-      glm::vec3 intersection = p + float(t_cap) * d;
-      if (intersection.x * intersection.x + intersection.z * intersection.z <= 0.25)
-      {
-        results.push_back(t_cap);
-      }
+        double t_cap = (-0.5 - p.y) / d.y;
+        if (t_cap > EPSILON)
+        {
+            glm::vec3 intersection_cap = p + static_cast<float>(t_cap) * d;
+            // Check if the intersection point lies within the circular base
+            if ((intersection_cap.x * intersection_cap.x + intersection_cap.z * intersection_cap.z) <= 0.25)
+            {
+                results.push_back(t_cap);
+            }
+        }
     }
-  }
 
-  return results;
+    
+    std::sort(results.begin(), results.end());
+
+    return results;
 }
