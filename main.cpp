@@ -719,7 +719,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     scaleSlider->callback(scaleSliderCB, (void*)this);
 
     // Uniform Scale Toggle
-    uniformScaleToggle = new Fl_Check_Button(10, 250, objectPack->w() - 20, 20, "Enable Uniform Scale");
+    uniformScaleToggle = new Fl_Check_Button(10, 250, objectPack->w() - 20, 20, "Uniform Scale");
     uniformScaleToggle->callback(uniformScaleToggleCB, (void *)this);
 
     // Scale X Slider

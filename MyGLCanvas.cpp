@@ -605,19 +605,46 @@ void MyGLCanvas::resetScene() {
     redraw();
 }
 
-
 void MyGLCanvas::deleteSelectedObject() {
     if (selectedObjId == -1) {
         fl_message("No object is selected for deletion.");
         return;
     }
+
     auto it = std::find_if(objectList.begin(), objectList.end(),
-                           [this](ObjectNode* obj) { return obj->id == this->selectedObjId; });
+                          [this](ObjectNode* obj) { return obj->id == this->selectedObjId; });
 
     if (it != objectList.end()) {
         ObjectNode* obj = *it;
-        objectList.erase(it);
-        delete obj;
+
+        // If it's a child node, remove from parent's children list
+        if (obj->parent) {
+            auto& parentChildren = obj->parent->children;
+            parentChildren.erase(
+                std::remove(parentChildren.begin(), parentChildren.end(), obj),
+                parentChildren.end()
+            );
+        }
+
+        // Recursive function to delete node and all its children
+        std::function<void(ObjectNode*)> deleteNodeAndChildren = [&](ObjectNode* node) {
+            // Recursively delete all children first
+            for (ObjectNode* child : node->children) {
+                deleteNodeAndChildren(child);
+            }
+            
+            // Remove from objectList
+            objectList.erase(
+                std::remove(objectList.begin(), objectList.end(), node),
+                objectList.end()
+            );
+            
+            delete node;
+        };
+
+        // Delete the node and all its children
+        deleteNodeAndChildren(obj);
+        
         selectedObjId = -1;
         redraw();
     }
@@ -625,9 +652,7 @@ void MyGLCanvas::deleteSelectedObject() {
     if (onSelectionChanged) {
         onSelectionChanged();
     }
-
 }
-
  
   
 void MyGLCanvas::setShape(OBJ_TYPE type, bool isChild) {
@@ -804,7 +829,7 @@ void MyGLCanvas::addObject(OBJ_TYPE type, ObjectNode* parent) {
     // Set parent-child relationship
     if (parent) {
         node->parent = parent;
-        node->translate = glm::vec3(0.0f, 0.1f, 0.0f);
+        node->translate = glm::vec3(0.0f, 0.5f, 0.0f);
 
         parent->children.push_back(node);
     }
