@@ -37,28 +37,27 @@
     </cameradata>
 
     <object type="tree" name="root">
+        <transblock>
+            <scale x="1" y="1" z="1"/>
+            <translate x="0.0806094" y="0.186941" z="-0.267551"/>
+            <object type="primitive" name="cube">
+                <diffuse r="1" g="0" b="1"/>
+            </object>
             <transblock>
-                <translate x="0.0603185" y="0.112432" z="-0.139241"/>
-                <scale x="1" y="1" z="1"/>
-                <object type="primitive" name="cube">
-                    <diffuse r="1" g="0.447059" b="1"/>
-                </object>
-            </transblock>
-            <transblock>
-                <translate x="0.934016" y="0.731445" z="-1.13195"/>
-                <rotate x="0" y="0" z="1" angle="-38"/>
-                <scale x="0.7" y="0.7" z="0.7"/>
+                <rotate x="0" y="0" z="1" angle="-46"/>
+                <scale x="0.5" y="0.5" z="0.5"/>
+                <translate x="0.60973" y="0.705705" z="-0.815435"/>
                 <object type="primitive" name="cylinder">
-                    <diffuse r="0.368627" g="1" b="1"/>
+                    <diffuse r="1" g="1" b="1"/>
                 </object>
+                <transblock>
+                    <scale x="1" y="1" z="1"/>
+                    <translate x="0" y="0.5" z="0"/>
+                    <object type="primitive" name="sphere">
+                        <diffuse r="1" g="0.164706" b="1"/>
+                    </object>
+                </transblock>
             </transblock>
-            <transblock>
-                <translate x="1.1495" y="1.00725" z="-1.13195"/>
-                <rotate x="0" y="0" z="1" angle="-38"/>
-                <scale x="0.7" y="0.7" z="0.7"/>
-                <object type="primitive" name="sphere">
-                    <diffuse r="0.572549" g="0.294118" b="1"/>
-                </object>
-            </transblock>
+        </transblock>
     </object>
 </scenefile>
