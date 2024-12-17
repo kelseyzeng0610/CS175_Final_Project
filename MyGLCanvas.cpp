@@ -82,39 +82,15 @@ MyGLCanvas::~MyGLCanvas()
 
 
 
-// glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
-// {
-//     glm::vec3 eyePos = camera.getEyePoint();
-//     glm::vec3 farPoint = getEyePoint(pixelX, pixelY, pixelWidth, pixelHeight);
-//     return glm::normalize(farPoint - eyePos);
-// }
-
-
 glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
 {
-    // Define the window coordinates for the mouse position
-    // Note: OpenGL's window coordinates have the origin at the bottom-left corner
-    // FLTK has the origin at the top-left corner, so we need to invert the Y coordinate
-    glm::vec3 winCoordNear = glm::vec3(pixelX, pixelHeight - pixelY, 0.0f); // Near plane (z = 0)
-    glm::vec3 winCoordFar = glm::vec3(pixelX, pixelHeight - pixelY, 1.0f);  // Far plane (z = 1)
-
-    // Retrieve the projection and modelview matrices
-    glm::mat4 projectionMatrix = camera.getProjectionMatrix();
-    glm::mat4 viewMatrix = camera.getModelViewMatrix();
-
-    // Define the viewport
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-
-    // Unproject the window coordinates to world coordinates
-    glm::vec3 worldNear = glm::unProject(winCoordNear, viewMatrix, projectionMatrix, glm::vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
-    glm::vec3 worldFar = glm::unProject(winCoordFar, viewMatrix, projectionMatrix, glm::vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
-
-    // Compute the ray direction
-    glm::vec3 rayDir = glm::normalize(worldFar - worldNear);
-
-    return rayDir;
+    glm::vec3 eyePos = camera.getEyePoint();
+    glm::vec3 farPoint = getEyePoint(pixelX, pixelY, pixelWidth, pixelHeight);
+    return glm::normalize(farPoint - eyePos);
 }
+
+
+
 
 
 glm::vec3 MyGLCanvas::getEyePoint(int pixelX, int pixelY, int screenWidth, int screenHeight)
