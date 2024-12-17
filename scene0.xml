@@ -1,33 +1,41 @@
 <scenefile>
-<globaldata>
-<diffusecoeff v="0.5"/>
-<specularcoeff v="0.5"/>
-<ambientcoeff v="0.5"/>
-</globaldata>
-<lightdata>
-<id v="0"/>
-<color r="0.5" g="0.5" b="0.5"/>
-<position x="2" y="2" z="2"/>
-</lightdata>
-<cameradata>
-<pos x="2" y="2" z="2"/>
-<up x="0" y="1" z="0"/>
-<heightangle v="60"/>
-</cameradata>
-<object type="tree" name="root">
-<transblock>
-<scale x="1" y="1" z="1"/>
-<translate x="0.511727" y="-0.179164" z="-0.252907"/>
-<object type="primitive" name="cube">
-<diffuse r="0.529412" g="1" b="1"/>
-</object>
-</transblock>
-<transblock>
-<scale x="0.4" y="0.4" z="0.4"/>
-<translate x="0" y="1" z="0"/>
-<object type="primitive" name="cylinder">
-<diffuse r="1" g="1" b="1"/>
-</object>
-</transblock>
-</object>
+    <globaldata>
+        <diffusecoeff v="0.5"/>
+        <specularcoeff v="0.5"/>
+        <ambientcoeff v="0.5"/>
+    </globaldata>
+    <lightdata>
+        <id v="0"/>
+        <color r="0.5" g="0.5" b="0.5"/>
+        <position x="1.10337" y="2" z="2.62537"/>
+    </lightdata>
+    <cameradata>
+        <pos x="1.10337" y="2" z="2.62537"/>
+        <up x="0" y="1" z="0"/>
+        <heightangle v="60"/>
+    </cameradata>
+    <object type="tree" name="root">
+        <transblock>
+            <scale x="1" y="1" z="1"/>
+            <translate x="0.0188029" y="0.163653" z="-0.182456"/>
+            <object type="primitive" name="cube">
+                <diffuse r="0" g="1" b="1"/>
+            </object>
+            <transblock>
+                <rotate x="0" y="0" z="1" angle="-38"/>
+                <scale x="0.8" y="0.7" z="0.7"/>
+                <translate x="0.687721" y="0.766163" z="-0.953885"/>
+                <object type="primitive" name="cylinder">
+                    <diffuse r="0.745098" g="0.439216" b="1"/>
+                </object>
+                <transblock>
+                    <scale x="1" y="1" z="1"/>
+                    <translate x="0" y="0.5" z="0"/>
+                    <object type="primitive" name="sphere">
+                        <diffuse r="1" g="1" b="0.266667"/>
+                    </object>
+                </transblock>
+            </transblock>
+        </transblock>
+    </object>
 </scenefile>

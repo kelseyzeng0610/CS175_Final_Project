@@ -414,89 +414,101 @@ std::string getPrimitiveTypeName(int type) {
     }
 }
 
+// Helper function to recursively write objects and their children to XML
+void writeObjectToXML(std::ostringstream& xml, ObjectNode* obj, int indentLevel = 2) {
+    std::string indent(indentLevel * 4, ' '); // 4 spaces per indent level
+
+    // Write transformation block
+    xml << indent << "<transblock>\n";
+
+    // Write rotation transformations
+    if (obj->rotation.x != 0.0f) {
+        xml << indent << "    <rotate x=\"1\" y=\"0\" z=\"0\" angle=\"" << obj->rotation.x << "\"/>\n";
+    }
+    if (obj->rotation.y != 0.0f) {
+        xml << indent << "    <rotate x=\"0\" y=\"1\" z=\"0\" angle=\"" << obj->rotation.y << "\"/>\n";
+    }
+    if (obj->rotation.z != 0.0f) {
+        xml << indent << "    <rotate x=\"0\" y=\"0\" z=\"1\" angle=\"" << obj->rotation.z << "\"/>\n";
+    }
+
+    // Write scale transformation
+    xml << indent << "    <scale x=\"" << obj->scale.x
+        << "\" y=\"" << obj->scale.y
+        << "\" z=\"" << obj->scale.z << "\"/>\n";
+
+    // Write translation transformation
+    xml << indent << "    <translate x=\"" << obj->translate.x
+        << "\" y=\"" << obj->translate.y
+        << "\" z=\"" << obj->translate.z << "\"/>\n";
+
+    // Write the primitive object
+    xml << indent << "    <object type=\"primitive\" name=\"" << getPrimitiveTypeName(obj->primitive->getType()) << "\">\n";
+
+    // Write color information (assuming diffuse color for simplicity)
+    xml << indent << "        <diffuse r=\"" << obj->red / 255.0f
+        << "\" g=\"" << obj->green / 255.0f
+        << "\" b=\"" << obj->blue / 255.0f << "\"/>\n";
+
+    xml << indent << "    </object>\n";
+
+    // Recursively write child objects
+    for (ObjectNode* child : obj->children) {
+        writeObjectToXML(xml, child, indentLevel + 1);
+    }
+
+    xml << indent << "</transblock>\n";
+}
 
 static void writeSceneToXML() {
     printf("Creating XML\n");
     string filename = "scene" + to_string(win->canvas->fileIndex) + ".xml";
     win->canvas->fileIndex++;
-    ofstream MyFile(filename);
     std::ostringstream xml;	// Write to the file
 
     // Start of the XML file
     xml << "<scenefile>\n";
 
     // Write global data
-    xml << "<globaldata>\n"
-        << "<diffusecoeff v=\"0.5\"/>\n"
-        << "<specularcoeff v=\"0.5\"/>\n"
-        << "<ambientcoeff v=\"0.5\"/>\n"
-        << "</globaldata>\n";
+    xml << "    <globaldata>\n"
+        << "        <diffusecoeff v=\"0.5\"/>\n"
+        << "        <specularcoeff v=\"0.5\"/>\n"
+        << "        <ambientcoeff v=\"0.5\"/>\n"
+        << "    </globaldata>\n";
 
     // Add light data
-    xml << "<lightdata>\n";
-    xml << "<id v=\"0\"/>\n";
-    xml << "<color r=\"" << 0.5
-        << "\" g=\"" << 0.5
-        << "\" b=\"" << 0.5 << "\"/>\n";
-    xml << "<position x=\"" << win->canvas->eyePosition.x 
+    xml << "    <lightdata>\n"
+        << "        <id v=\"0\"/>\n"
+        << "        <color r=\"0.5\" g=\"0.5\" b=\"0.5\"/>\n"
+        << "        <position x=\"" << win->canvas->eyePosition.x 
         << "\" y=\"" << win->canvas->eyePosition.y
-        << "\" z=\"" << win->canvas->eyePosition.z << "\"/>\n";
-    xml << "    </lightdata>\n";
+        << "\" z=\"" << win->canvas->eyePosition.z << "\"/>\n"
+        << "    </lightdata>\n";
 
     // Write camera data
     glm::vec3 eyePos = win->canvas->camera.getEyePoint();
     glm::vec3 upVec = win->canvas->camera.getUpVector();
     float viewAngle = win->canvas->camera.getViewAngle();
 
-    xml << "<cameradata>\n"
-        << "<pos x=\"" << eyePos.x << "\" y=\"" << eyePos.y << "\" z=\"" << eyePos.z << "\"/>\n"
-        << "<up x=\"" << upVec.x << "\" y=\"" << upVec.y << "\" z=\"" << upVec.z << "\"/>\n"
-        << "<heightangle v=\"" << viewAngle << "\"/>\n"
-        << "</cameradata>\n";
+    xml << "    <cameradata>\n"
+        << "        <pos x=\"" << eyePos.x << "\" y=\"" << eyePos.y << "\" z=\"" << eyePos.z << "\"/>\n"
+        << "        <up x=\"" << upVec.x << "\" y=\"" << upVec.y << "\" z=\"" << upVec.z << "\"/>\n"
+        << "        <heightangle v=\"" << viewAngle << "\"/>\n"
+        << "    </cameradata>\n";
 
     // Start the root object
-    xml << "<object type=\"tree\" name=\"root\">\n";
+    xml << "    <object type=\"tree\" name=\"root\">\n";
 
-	// Loop through the object list
-	for (const auto& obj : win->canvas->objectList) {
-		xml << "<transblock>\n";
+    // Loop through the root objects (objects without a parent)
+    for (const auto& obj : win->canvas->objectList) {
+        if (obj->parent == nullptr) { // Only process root objects
+            writeObjectToXML(xml, obj, 2); // Start with indent level 2
+        }
+    }
 
-		// Write rotation transformations for each axis if the rotation angles are non-zero
-		if (obj->rotation.x != 0.0f) {
-			xml << "<rotate x=\"1\" y=\"0\" z=\"0\" angle=\"" << obj->rotation.x << "\"/>\n";
-		}
-		if (obj->rotation.y != 0.0f) {
-			xml << "<rotate x=\"0\" y=\"1\" z=\"0\" angle=\"" << obj->rotation.y << "\"/>\n";
-		}
-		if (obj->rotation.z != 0.0f) {
-			xml << "<rotate x=\"0\" y=\"0\" z=\"1\" angle=\"" << obj->rotation.z << "\"/>\n";
-		}
+    // End the root object
+    xml << "    </object>\n";
 
-		// Write scale transformation
-		xml << "<scale x=\"" << obj->scale.x
-			<< "\" y=\"" << obj->scale.y
-			<< "\" z=\"" << obj->scale.z << "\"/>\n";
-
-		// Write translation transformation
-		xml << "<translate x=\"" << obj->translate.x
-			<< "\" y=\"" << obj->translate.y
-			<< "\" z=\"" << obj->translate.z << "\"/>\n";
-
-		// Write the primitive object
-		xml << "<object type=\"primitive\" name=\"" << getPrimitiveTypeName(obj->primitive->getType()) << "\">\n";
-
-		// Write color information (assuming diffuse color for simplicity)
-		xml << "<diffuse r=\"" << obj->red / 255.0f
-			<< "\" g=\"" << obj->green / 255.0f
-			<< "\" b=\"" << obj->blue / 255.0f << "\"/>\n";
-
-		xml << "</object>\n";
-
-		xml << "</transblock>\n";
-	}
-
-	// End the root object
-	xml << "</object>\n";
     // End of the XML file
     xml << "</scenefile>\n";
 
@@ -510,6 +522,102 @@ static void writeSceneToXML() {
         std::cerr << "Error: Could not open file " << filename << " for writing.\n";
     }
 }
+
+// static void writeSceneToXML() {
+//     printf("Creating XML\n");
+//     string filename = "scene" + to_string(win->canvas->fileIndex) + ".xml";
+//     win->canvas->fileIndex++;
+//     ofstream MyFile(filename);
+//     std::ostringstream xml;	// Write to the file
+
+//     // Start of the XML file
+//     xml << "<scenefile>\n";
+
+//     // Write global data
+//     xml << "<globaldata>\n"
+//         << "<diffusecoeff v=\"0.5\"/>\n"
+//         << "<specularcoeff v=\"0.5\"/>\n"
+//         << "<ambientcoeff v=\"0.5\"/>\n"
+//         << "</globaldata>\n";
+
+//     // Add light data
+//     xml << "<lightdata>\n";
+//     xml << "<id v=\"0\"/>\n";
+//     xml << "<color r=\"" << 0.5
+//         << "\" g=\"" << 0.5
+//         << "\" b=\"" << 0.5 << "\"/>\n";
+//     xml << "<position x=\"" << win->canvas->eyePosition.x 
+//         << "\" y=\"" << win->canvas->eyePosition.y
+//         << "\" z=\"" << win->canvas->eyePosition.z << "\"/>\n";
+//     xml << "    </lightdata>\n";
+
+//     // Write camera data
+//     glm::vec3 eyePos = win->canvas->camera.getEyePoint();
+//     glm::vec3 upVec = win->canvas->camera.getUpVector();
+//     float viewAngle = win->canvas->camera.getViewAngle();
+
+//     xml << "<cameradata>\n"
+//         << "<pos x=\"" << eyePos.x << "\" y=\"" << eyePos.y << "\" z=\"" << eyePos.z << "\"/>\n"
+//         << "<up x=\"" << upVec.x << "\" y=\"" << upVec.y << "\" z=\"" << upVec.z << "\"/>\n"
+//         << "<heightangle v=\"" << viewAngle << "\"/>\n"
+//         << "</cameradata>\n";
+
+//     // Start the root object
+//     xml << "<object type=\"tree\" name=\"root\">\n";
+
+// 	// Loop through the object list
+// 	for (const auto& obj : win->canvas->objectList) {
+// 		xml << "<transblock>\n";
+
+// 		// Write rotation transformations for each axis if the rotation angles are non-zero
+// 		if (obj->rotation.x != 0.0f) {
+// 			xml << "<rotate x=\"1\" y=\"0\" z=\"0\" angle=\"" << obj->rotation.x << "\"/>\n";
+// 		}
+// 		if (obj->rotation.y != 0.0f) {
+// 			xml << "<rotate x=\"0\" y=\"1\" z=\"0\" angle=\"" << obj->rotation.y << "\"/>\n";
+// 		}
+// 		if (obj->rotation.z != 0.0f) {
+// 			xml << "<rotate x=\"0\" y=\"0\" z=\"1\" angle=\"" << obj->rotation.z << "\"/>\n";
+// 		}
+
+// 		// Write scale transformation
+// 		xml << "<scale x=\"" << obj->scale.x
+// 			<< "\" y=\"" << obj->scale.y
+// 			<< "\" z=\"" << obj->scale.z << "\"/>\n";
+
+// 		// Write translation transformation
+// 		xml << "<translate x=\"" << obj->translate.x
+// 			<< "\" y=\"" << obj->translate.y
+// 			<< "\" z=\"" << obj->translate.z << "\"/>\n";
+
+// 		// Write the primitive object
+// 		xml << "<object type=\"primitive\" name=\"" << getPrimitiveTypeName(obj->primitive->getType()) << "\">\n";
+
+// 		// Write color information (assuming diffuse color for simplicity)
+// 		xml << "<diffuse r=\"" << obj->red / 255.0f
+// 			<< "\" g=\"" << obj->green / 255.0f
+// 			<< "\" b=\"" << obj->blue / 255.0f << "\"/>\n";
+
+// 		xml << "</object>\n";
+
+// 		xml << "</transblock>\n";
+// 	}
+
+// 	// End the root object
+// 	xml << "</object>\n";
+//     // End of the XML file
+//     xml << "</scenefile>\n";
+
+//     // Write to file
+//     std::ofstream outFile(filename);
+//     if (outFile.is_open()) {
+//         outFile << xml.str();
+//         outFile.close();
+//         std::cout << "Scene written to " << filename << std::endl;
+//     } else {
+//         std::cerr << "Error: Could not open file " << filename << " for writing.\n";
+//     }
+// }
 
 static void addShapeCB(Fl_Widget* w, void* userdata){
     MyAppWindow* window = (MyAppWindow*)userdata;
