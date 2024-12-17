@@ -22,15 +22,15 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <algorithm> // For std::find_if
+#include <algorithm> 
 
 using namespace std;
 
-// Forward declaration
+
 class MyAppWindow;
 MyAppWindow *win;
 
-// Updated to handle ObjectNode* instead of ObjectNode
+
 class MyAppWindow : public Fl_Window {
 public:
     Fl_Button* wireButton;
@@ -78,7 +78,7 @@ public:
     Fl_Slider* segmentsYSlider;
 
 public:
-    // APP WINDOW CONSTRUCTOR
+    
     MyAppWindow(int W, int H, const char*L = 0);
 
     static void idleCB(void* userdata) {
@@ -88,15 +88,15 @@ public:
     void updateSelectedObject() {
         int selectedId = canvas->selectedObjId;
         if (selectedId != -1) {
-            // Updated to handle ObjectNode*
+          
             auto it = std::find_if(canvas->objectList.begin(),
                                    canvas->objectList.end(),
                                    [selectedId](ObjectNode* obj) { return obj->id == selectedId; });
 
             if (it != canvas->objectList.end()) {
-                ObjectNode* obj = *it; // Dereference pointer
+                ObjectNode* obj = *it;
 
-                // Update the sliders to reflect the selected object's color
+                
                 rSlider->value(obj->red);
                 gSlider->value(obj->green);
                 bSlider->value(obj->blue);
@@ -108,9 +108,9 @@ public:
                 scaleXSlider->value(obj->scale.x);
                 scaleYSlider->value(obj->scale.y);
                 scaleZSlider->value(obj->scale.z);
-                scaleSlider->value(obj->scale.x); // Assuming uniform scale
+                scaleSlider->value(obj->scale.x);
 
-                // Redraw them to show the updated value
+             
                 rSlider->redraw();
                 gSlider->redraw();
                 bSlider->redraw();
@@ -130,7 +130,7 @@ public:
 private:
 
     static void uniformScaleToggleCB(Fl_Widget *w, void *userdata) {
-        // Handle toggle for uniform scaling
+      
         if (((Fl_Check_Button *)w)->value() == 1) {
             win->scaleXSlider->deactivate();
             win->scaleYSlider->deactivate();
@@ -144,7 +144,7 @@ private:
         }
     }
 
-    // Updated to handle ObjectNode* instead of ObjectNode&
+   
     static void toggleCB(Fl_Widget* w, void* userdata) {
         int value = ((Fl_Button*)w)->value();
         printf("Toggle Button value: %d\n", value);
@@ -234,13 +234,13 @@ private:
     static void sizeCB(Fl_Widget* w, void* userdata) {
         int value = ((Fl_Slider*)w)->value();
         printf("Size Slider value: %d\n", value);
-        // TODO: add size property
+        
     }
 
     static void renderCB(Fl_Widget* w, void* data) {
         cout << "Render Scene" << endl;
-        // TODO: add ray tracing
-        // win->canvas->renderScene();
+        // TODO: add ray tracing in the future
+        
     }
 
     static void maxRecursionDepthSliderCB(Fl_Widget* w, void* userdata) {
@@ -316,12 +316,9 @@ private:
     }
 };
 
-// Callback for radio buttons (if implemented)
-static void radioButtonCB(Fl_Widget* w, void* userdata) {
-    // Implement shape selection if needed
-}
 
-// Updated to handle ObjectNode* instead of ObjectNode&
+
+// Updated to handle ObjectNode* instead of ObjectNode&!!
 static void addChildCB(Fl_Widget* w, void* userdata) {
     MyAppWindow* window = (MyAppWindow*)userdata;
     int selectedId = window->canvas->selectedObjId;
@@ -358,7 +355,7 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
     Fl_Button* okButton = new Fl_Button(60, 150, 80, 30, "OK");
     Fl_Button* cancelButton = new Fl_Button(160, 150, 80, 30, "Cancel");
 
-    // Callback for the OK button
+
     okButton->callback([](Fl_Widget* btn, void* data) {
         Fl_Window* win = (Fl_Window*)data;
         MyAppWindow* appWin = (MyAppWindow*)win->user_data();
@@ -375,14 +372,14 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
             default: type = SHAPE_SPHERE; break;
         }
 
-        // Find the selected parent node
+      
         int parentId = appWin->canvas->selectedObjId;
         auto parentIt = std::find_if(appWin->canvas->objectList.begin(),
                                      appWin->canvas->objectList.end(),
                                      [parentId](ObjectNode* obj) { return obj->id == parentId; });
 
         if (parentIt != appWin->canvas->objectList.end()) {
-            // Add the child node
+        
             appWin->canvas->setShape(type, *parentIt); // Pass the parent pointer
             printf("Child shape added to object ID %d\n", parentId);
         }
@@ -390,7 +387,7 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
         win->hide();
     }, shapeWindow);
 
-    // Callback for the Cancel button
+    
     cancelButton->callback([](Fl_Widget* btn, void* data) {
         Fl_Window* win = (Fl_Window*)data;
         win->hide(); // Close the window
@@ -401,7 +398,7 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
     shapeWindow->show();
 }
 
-// Helper function to get the corresponding name of that enum index
+
 std::string getPrimitiveTypeName(int type) {
     switch (type) {
         case SHAPE_CUBE:
@@ -417,7 +414,7 @@ std::string getPrimitiveTypeName(int type) {
     }
 }
 
-// Updated to handle ObjectNode* instead of ObjectNode&
+
 static void writeSceneToXML() {
     printf("Creating XML\n");
     string filename = "scene" + to_string(win->canvas->fileIndex) + ".xml";
@@ -536,19 +533,19 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
         Fl_Choice* choice = (Fl_Choice*)win->child(1);
         int selected = choice->value();
         switch (selected) {
-            case 0: // Cube
+            case 0: 
                 printf("Selected Cube\n");
                 appWin->canvas->setShape(SHAPE_CUBE);
                 break;
-            case 1: // Sphere
+            case 1: 
                 printf("Selected Sphere\n");
                 appWin->canvas->setShape(SHAPE_SPHERE);
                 break;
-            case 2: // Cylinder
+            case 2: 
                 printf("Selected Cylinder\n");
                 appWin->canvas->setShape(SHAPE_CYLINDER);
                 break;
-            case 3: // Cone
+            case 3: 
                 printf("Selected Cone\n");
                 appWin->canvas->setShape(SHAPE_CONE);
                 break;
@@ -558,23 +555,23 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
 
     cancelButton->callback([](Fl_Widget* btn, void* data) {
         Fl_Window* win = (Fl_Window*)data;
-        win->hide(); // Close the shape selection window
+        win->hide();
     }, shapeWindow);
     shapeWindow->end();
-    shapeWindow->set_modal(); // Make it a modal dialog
+    shapeWindow->set_modal(); 
     shapeWindow->show();
 }
 
 MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     begin();
     // OpenGL window
-    // Adjusted to match pointer-based objectList
+
     canvas = new MyGLCanvas(10, 10, w() - 320, h() - 20);
 
-    Fl_Pack* pack = new Fl_Pack(w() - 310, 30, 150, h() - 40, "Controls"); // Adjusted height
+    Fl_Pack* pack = new Fl_Pack(w() - 310, 30, 150, h() - 40, "Controls"); 
     pack->box(FL_DOWN_FRAME);
     pack->type(Fl_Pack::VERTICAL);
-    pack->spacing(10); // Reduced spacing for better layout
+    pack->spacing(10); 
     pack->begin();
 
     addChildButton = new Fl_Button(10, 10, pack->w() - 20, 30, "Add Child");
@@ -584,7 +581,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	deleteButton->callback(delete_button_callback, (void*)this);
 
 
-    // Reset Scene Button
+    
     resetSceneButton = new Fl_Button(10, 50, pack->w() - 20, 30, "Reset Scene");
     resetSceneButton->callback(resetSceneCB, (void*)this);
 
@@ -639,7 +636,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     gSlider->type(FL_HOR_SLIDER);
     gSlider->bounds(0, 255);
     gSlider->step(1);
-    gSlider->value(255); // Default value set to 255
+    gSlider->value(255); 
     gSlider->callback(greenCB);
 
     // Blue Slider
@@ -715,7 +712,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     scaleSlider->type(FL_HOR_SLIDER);
     scaleSlider->bounds(0.1, 2.0);
     scaleSlider->step(0.1);
-    scaleSlider->value(canvas->scale); // Assuming uniform scale
+    scaleSlider->value(canvas->scale); // Assuming uniform scale!
     scaleSlider->callback(scaleSliderCB, (void*)this);
 
     // Uniform Scale Toggle
@@ -821,7 +818,6 @@ int main(int argc, char **argv) {
     glutInit(&argc, argv);
     win = new MyAppWindow(900, 600, "Scene Builder 1.0");
     win->resizable(win->canvas); // Make the OpenGL canvas resizable
-    // Set the callback to reflect the current value of selected object
     win->canvas->onSelectionChanged = []() {
         win->updateSelectedObject();
     };

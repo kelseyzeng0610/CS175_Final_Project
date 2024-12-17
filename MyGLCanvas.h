@@ -30,7 +30,7 @@ struct ObjectNode {
     int red, green, blue;
     Shape* primitive;
 
-    ObjectNode* parent; // Pointer to parent node
+    ObjectNode* parent;
     std::vector<ObjectNode*> children;
 
     ObjectNode() : parent(nullptr), primitive(nullptr) {}
@@ -39,16 +39,15 @@ struct ObjectNode {
 
 class MyGLCanvas : public Fl_Gl_Window {
 public:
-    std::function<void()> onSelectionChanged; // callback for when selection changes
+    std::function<void()> onSelectionChanged; 
 
-	// Length of our spline (i.e how many points do we randomly generate)
+
 
 
 	glm::vec3 eyePosition;
 	glm::vec3 rotVec;
 	glm::vec3 lookatPoint;
-	// glm::vec3 lookVector;
-	// glm::vec3 upVector;
+	
 
 	glm::vec3 dragPlaneNormal;
 	glm::vec3 dragPlanePoint;
@@ -83,7 +82,7 @@ public:
 	int nextObjectId;
 	int fileIndex;
 
-	// used in flattened list to make update values
+	
 	std::vector<ObjectNode*> objectList;
 
 
@@ -94,7 +93,7 @@ MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	void setShape(OBJ_TYPE type, bool isChild = false);
 	void addObject(OBJ_TYPE type, ObjectNode* parent = nullptr);
 
-	// void drawObject(ObjectNode node, glm::mat4 trans);
+
 	void drawSphere();
 	void drawCube();
 	void drawCylinder();
@@ -137,7 +136,7 @@ private:
 	glm::vec3 oldIsectPoint;
 	float oldT;
 
-	//// Used for intersection
+
 	glm::vec3 spherePosition;
 
 	int mouseX = 0;
@@ -149,10 +148,7 @@ private:
 	std::vector<double> intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 	std::vector<double> intersectWithCone(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 	
-	// void storeObjects(SceneNode* node, glm::mat4 parent_transform);
-	// void setpixel(GLubyte* buf, int x, int y, int r, int g, int b);
-	// void getClosestT();
-	// void renderEnv();
+
 
 };
 

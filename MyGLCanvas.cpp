@@ -72,7 +72,7 @@ MyGLCanvas::~MyGLCanvas()
   delete sphere;
   
   for (ObjectNode* obj : objectList) {
-        delete obj->primitive; // Assuming primitives are dynamically allocated
+        delete obj->primitive; 
         delete obj;
     }
     objectList.clear();
@@ -93,18 +93,18 @@ glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
 
 glm::vec3 MyGLCanvas::getEyePoint(int pixelX, int pixelY, int screenWidth, int screenHeight)
 {
-    // Convert pixel coordinates to normalized device coordinates (-1 to 1)
+    
     float ndcX = (2.0f * pixelX / screenWidth) - 1.0f;
     float ndcY = 1.0f - (2.0f * pixelY / screenHeight);
 
-    // Scale based on camera's view angle and aspect ratio
+  
     float aspectRatio = (float)screenWidth / screenHeight;
     float filmPlanDepth = camera.getFilmPlanDepth();
 
-    // Create point in camera space (using film plane depth from camera)
+    
     glm::vec4 cameraPoint(ndcX * aspectRatio, ndcY, -filmPlanDepth, 1.0f);
 
-    // Transform from camera space to world space using inverse view matrix
+    
     glm::mat4 viewToWorld = camera.getInverseModelViewMatrix();
     glm::vec4 worldPoint = viewToWorld * cameraPoint;
 
@@ -266,9 +266,7 @@ void MyGLCanvas::drawNode(ObjectNode* node, glm::mat4 parentTransform) {
         glColor3f(1.0f, 1.0f, 1.0f);
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        // printf("red: %f\n", red);
-        // printf("green: %f\n", green);
-        // printf("blue: %f\n", blue);
+  
         glColor3f(red, green, blue);
     }
 
@@ -435,7 +433,7 @@ int MyGLCanvas::handle(int e)
 
                 // Initialize drag state
                 dragging = true;
-                oldIsectPoint = worldIntersection; // Store in world space
+                oldIsectPoint = worldIntersection; 
 
                 printf("Dragging started. Object ID: %d, Initial Intersection: (%f, %f, %f)\n",
                        node->id, oldIsectPoint.x, oldIsectPoint.y, oldIsectPoint.z);
