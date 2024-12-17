@@ -460,36 +460,46 @@ static void writeSceneToXML() {
     // Start the root object
     xml << "<object type=\"tree\" name=\"root\">\n";
 
-    // Loop through the object list
-    for (const auto& obj : win->canvas->objectList) {
-        xml << "<transblock>\n";
+	// Loop through the object list
+	for (const auto& obj : win->canvas->objectList) {
+		xml << "<transblock>\n";
 
-        // Write scale transformation
-        xml << "<scale x=\"" << obj->scale.x
-            << "\" y=\"" << obj->scale.y
-            << "\" z=\"" << obj->scale.z << "\"/>\n";
+		// Write rotation transformations for each axis if the rotation angles are non-zero
+		if (obj->rotation.x != 0.0f) {
+			xml << "<rotate x=\"1\" y=\"0\" z=\"0\" angle=\"" << obj->rotation.x << "\"/>\n";
+		}
+		if (obj->rotation.y != 0.0f) {
+			xml << "<rotate x=\"0\" y=\"1\" z=\"0\" angle=\"" << obj->rotation.y << "\"/>\n";
+		}
+		if (obj->rotation.z != 0.0f) {
+			xml << "<rotate x=\"0\" y=\"0\" z=\"1\" angle=\"" << obj->rotation.z << "\"/>\n";
+		}
 
-        // Write translation transformation
-        xml << "<translate x=\"" << obj->translate.x
-            << "\" y=\"" << obj->translate.y
-            << "\" z=\"" << obj->translate.z << "\"/>\n";
+		// Write scale transformation
+		xml << "<scale x=\"" << obj->scale.x
+			<< "\" y=\"" << obj->scale.y
+			<< "\" z=\"" << obj->scale.z << "\"/>\n";
 
-        // Write the primitive object
-        xml << "<object type=\"primitive\" name=\"" << getPrimitiveTypeName(obj->primitive->getType()) << "\">\n";
+		// Write translation transformation
+		xml << "<translate x=\"" << obj->translate.x
+			<< "\" y=\"" << obj->translate.y
+			<< "\" z=\"" << obj->translate.z << "\"/>\n";
 
-        // Write color information (assuming diffuse color for simplicity)
-        xml << "<diffuse r=\"" << obj->red / 255.0f
-            << "\" g=\"" << obj->green / 255.0f
-            << "\" b=\"" << obj->blue / 255.0f << "\"/>\n";
+		// Write the primitive object
+		xml << "<object type=\"primitive\" name=\"" << getPrimitiveTypeName(obj->primitive->getType()) << "\">\n";
 
-        xml << "</object>\n";
+		// Write color information (assuming diffuse color for simplicity)
+		xml << "<diffuse r=\"" << obj->red / 255.0f
+			<< "\" g=\"" << obj->green / 255.0f
+			<< "\" b=\"" << obj->blue / 255.0f << "\"/>\n";
 
-        xml << "</transblock>\n";
-    }
+		xml << "</object>\n";
 
-    // End the root object
-    xml << "</object>\n";
+		xml << "</transblock>\n";
+	}
 
+	// End the root object
+	xml << "</object>\n";
     // End of the XML file
     xml << "</scenefile>\n";
 
