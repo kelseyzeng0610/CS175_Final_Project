@@ -136,7 +136,7 @@ private:
 
 	int mouseX = 0;
 	int mouseY = 0;
-
+	void testObjectIntersection(ObjectNode* node, glm::mat4 parentTransform, glm::vec3 eyePoint, glm::vec3 rayDir, const ObjectNode*& closestObj, float& closestT);
 	std::vector<double> intersectWithSphere(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 	std::vector<double> intersectWithCube(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);
 	std::vector<double> intersectWithCylinder(glm::vec3 eyePointP, glm::vec3 rayV, glm::mat4 transformMatrix);

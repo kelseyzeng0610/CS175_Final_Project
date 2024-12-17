@@ -244,9 +244,9 @@ void MyGLCanvas::drawNode(ObjectNode* node, glm::mat4 parentTransform) {
     if (!node) return;
 
     glm::mat4 localTransform = glm::translate(glm::mat4(1.0f), node->translate) *
-                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f)) *
-                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
-                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.x), glm::vec3(1, 0, 0)) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.y), glm::vec3(0, 1, 0)) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.z), glm::vec3(0, 0, 1)) *
                                glm::scale(glm::mat4(1.0f), node->scale);
 
     glm::mat4 worldTransform = parentTransform * localTransform;
@@ -254,60 +254,113 @@ void MyGLCanvas::drawNode(ObjectNode* node, glm::mat4 parentTransform) {
     glPushMatrix();
     glMultMatrixf(glm::value_ptr(worldTransform));
 
+    // Set the color dynamically
     float red = node->red / 255.0f;
     float green = node->green / 255.0f;
     float blue = node->blue / 255.0f;
     glColor3f(red, green, blue);
 
+    // Draw the primitive if it exists
     if (node->primitive) {
         node->primitive->draw();
     }
 
     glPopMatrix();
 
-    // Draw children
+    // Recursively draw children
     for (ObjectNode* child : node->children) {
         drawNode(child, worldTransform);
     }
 }
 
-
-
-int MyGLCanvas::selectObject(int mouseX, int mouseY)
-{
+int MyGLCanvas::selectObject(int mouseX, int mouseY) {
     glm::vec3 eyePoint = camera.getEyePoint();
     glm::vec3 rayDir = generateRay(mouseX, mouseY);
 
     const ObjectNode* closestObj = nullptr;
     float closestT = INFINITY;
 
-    for (auto& obj : objectList) {
-        double t = intersect(obj, eyePoint, rayDir);  
-        if (t > 0 && t < closestT) {
-            closestT = t;
-            closestObj = &obj;
+    // Start testing from root nodes
+    for (ObjectNode& obj : objectList) {
+        if (obj.parent == nullptr) { // Only test root nodes
+            testObjectIntersection(&obj, glm::mat4(1.0f), eyePoint, rayDir, closestObj, closestT);
         }
     }
 
+    // Update selected object ID
     if (closestObj) {
         selectedObjId = closestObj->id;  
         if (onSelectionChanged) {
-            onSelectionChanged(); // Notify the main window that a new object is selected
+            onSelectionChanged(); // Notify selection
         }
         return selectedObjId;
     }
 
-    // If no object is selected
-    // If you want to notify on deselection as well:
+    // Deselect if no object is selected
     if (selectedObjId != -1) {
-        selectedObjId = -1;  // No object selected
+        selectedObjId = -1;  
         if (onSelectionChanged) {
-            onSelectionChanged(); // Notify that now no object is selected
+            onSelectionChanged();
         }
     }
     return -1;
 }
 
+void MyGLCanvas::testObjectIntersection(ObjectNode* node, glm::mat4 parentTransform,
+                                        glm::vec3 eyePoint, glm::vec3 rayDir,
+                                        const ObjectNode*& closestObj, float& closestT) {
+    if (!node) return;
+
+    // Accumulate the world transformation
+    glm::mat4 localTransform = glm::translate(glm::mat4(1.0f), node->translate) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.x), glm::vec3(1, 0, 0)) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.y), glm::vec3(0, 1, 0)) *
+                               glm::rotate(glm::mat4(1.0f), glm::radians(node->rotation.z), glm::vec3(0, 0, 1)) *
+                               glm::scale(glm::mat4(1.0f), node->scale);
+
+    glm::mat4 worldTransform = parentTransform * localTransform;
+    glm::mat4 invTransform = glm::inverse(worldTransform);
+
+    // Transform ray into object space
+    glm::vec3 transformedEye = glm::vec3(invTransform * glm::vec4(eyePoint, 1.0f));
+    glm::vec3 transformedRay = glm::vec3(invTransform * glm::vec4(rayDir, 0.0f));
+
+    // Perform intersection test
+    std::vector<double> results;
+    switch (node->primitive->getType()) {
+        case SHAPE_CUBE:
+            results = intersectWithCube(transformedEye, transformedRay, glm::mat4(1.0f));
+            break;
+        case SHAPE_SPHERE:
+            results = intersectWithSphere(transformedEye, transformedRay, glm::mat4(1.0f));
+            break;
+        case SHAPE_CYLINDER:
+            results = intersectWithCylinder(transformedEye, transformedRay, glm::mat4(1.0f));
+            break;
+        case SHAPE_CONE:
+            results = intersectWithCone(transformedEye, transformedRay, glm::mat4(1.0f));
+            break;
+        default:
+            break;
+    }
+
+    // Find the closest intersection
+    for (double t : results) {
+        if (t > 0) {
+            glm::vec3 intersection = transformedEye + static_cast<float>(t) * transformedRay;
+            double worldDistance = glm::length(glm::vec3(worldTransform * glm::vec4(intersection, 1.0f)) - eyePoint);
+            if (worldDistance < closestT) {
+                closestT = worldDistance;
+                closestObj = node;
+            }
+        }
+    }
+
+    // Recursively test children
+    for (ObjectNode* child : node->children) {
+        testObjectIntersection(child, worldTransform, eyePoint, rayDir, closestObj, closestT);
+    }
+}
 
 
 
@@ -376,27 +429,44 @@ int MyGLCanvas::handle(int e)
     mouseY = (int)Fl::event_y();
 
     if (drag && selectedObjId != -1) {
-        auto it = std::find_if(objectList.begin(), objectList.end(),
-            [this](const ObjectNode& obj) { return obj.id == selectedObjId; });
+    auto it = std::find_if(objectList.begin(), objectList.end(),
+                           [this](const ObjectNode& obj) { return obj.id == selectedObjId; });
 
-        if (it != objectList.end()) {
-            glm::vec3 eyePoint = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
-            glm::vec3 rayDir = generateRay(mouseX, mouseY);
+    if (it != objectList.end()) {
+        ObjectNode* node = &(*it);
 
-            glm::vec3 newIntersection = getIsectPointWorldCoord(eyePoint, rayDir, oldT);
-            glm::vec3 offset = oldIsectPoint - oldCenter;
+        // Get the ray in world space
+        glm::vec3 eyePoint = getEyePoint(mouseX, mouseY, pixelWidth, pixelHeight);
+        glm::vec3 rayDir = generateRay(mouseX, mouseY);
 
-            // Update object's translate property
-            it->translate = newIntersection - offset;
+        // Compute the new intersection in world space
+        glm::vec3 newIntersection = getIsectPointWorldCoord(eyePoint, rayDir, oldT);
 
-            // Update dragging reference points
-            oldCenter = it->translate;
-            oldIsectPoint = newIntersection;
-
-            // Redraw to reflect the changes
-            redraw();
+        // Get the parent's transformation matrix
+        glm::mat4 parentTransform = glm::mat4(1.0f);
+        if (node->parent) {
+            parentTransform = glm::translate(glm::mat4(1.0f), node->parent->translate) *
+                              glm::rotate(glm::mat4(1.0f), glm::radians(node->parent->rotation.x), glm::vec3(1, 0, 0)) *
+                              glm::rotate(glm::mat4(1.0f), glm::radians(node->parent->rotation.y), glm::vec3(0, 1, 0)) *
+                              glm::rotate(glm::mat4(1.0f), glm::radians(node->parent->rotation.z), glm::vec3(0, 0, 1)) *
+                              glm::scale(glm::mat4(1.0f), node->parent->scale);
         }
+
+        // Compute the offset in local space
+        glm::vec4 localIntersection = glm::inverse(parentTransform) * glm::vec4(newIntersection, 1.0f);
+        glm::vec3 offset = glm::vec3(localIntersection) - oldIsectPoint;
+
+        // Update translation in local space
+        node->translate += offset;
+
+        // Update references for next drag event
+        oldIsectPoint = glm::vec3(localIntersection);
+
+        // Redraw to reflect changes
+        redraw();
     }
+}
+
     return 1;
 
 
@@ -697,6 +767,7 @@ void MyGLCanvas::addObject(OBJ_TYPE type, ObjectNode* parent) {
     if (parent) {
         node->parent = parent;
         node->translate = glm::vec3(0.0f, 1.0f, 0.0f);
+
         parent->children.push_back(node);
     }
 
