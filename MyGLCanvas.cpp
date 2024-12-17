@@ -82,13 +82,39 @@ MyGLCanvas::~MyGLCanvas()
 
 
 
+// glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
+// {
+//     glm::vec3 eyePos = camera.getEyePoint();
+//     glm::vec3 farPoint = getEyePoint(pixelX, pixelY, pixelWidth, pixelHeight);
+//     return glm::normalize(farPoint - eyePos);
+// }
+
+
 glm::vec3 MyGLCanvas::generateRay(int pixelX, int pixelY)
 {
-    glm::vec3 eyePos = camera.getEyePoint();
-    glm::vec3 farPoint = getEyePoint(pixelX, pixelY, pixelWidth, pixelHeight);
-    return glm::normalize(farPoint - eyePos);
-}
+    // Define the window coordinates for the mouse position
+    // Note: OpenGL's window coordinates have the origin at the bottom-left corner
+    // FLTK has the origin at the top-left corner, so we need to invert the Y coordinate
+    glm::vec3 winCoordNear = glm::vec3(pixelX, pixelHeight - pixelY, 0.0f); // Near plane (z = 0)
+    glm::vec3 winCoordFar = glm::vec3(pixelX, pixelHeight - pixelY, 1.0f);  // Far plane (z = 1)
 
+    // Retrieve the projection and modelview matrices
+    glm::mat4 projectionMatrix = camera.getProjectionMatrix();
+    glm::mat4 viewMatrix = camera.getModelViewMatrix();
+
+    // Define the viewport
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    // Unproject the window coordinates to world coordinates
+    glm::vec3 worldNear = glm::unProject(winCoordNear, viewMatrix, projectionMatrix, glm::vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
+    glm::vec3 worldFar = glm::unProject(winCoordFar, viewMatrix, projectionMatrix, glm::vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
+
+    // Compute the ray direction
+    glm::vec3 rayDir = glm::normalize(worldFar - worldNear);
+
+    return rayDir;
+}
 
 
 glm::vec3 MyGLCanvas::getEyePoint(int pixelX, int pixelY, int screenWidth, int screenHeight)
@@ -127,11 +153,11 @@ double MyGLCanvas::intersect(ObjectNode* obj, glm::vec3 eyePointP, glm::vec3 ray
                                 glm::rotate(glm::mat4(1.0f), glm::radians(obj->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
                                 glm::scale(glm::mat4(1.0f), obj->scale);
 
-    glm::mat4 invTransformMatrix = glm::inverse(transformMatrix);
+    glm::mat4 inverseTransformMatrix = glm::inverse(transformMatrix);
 
     // Transform ray and eye point into object space
-    glm::vec3 invEyePoint = glm::vec3(invTransformMatrix * glm::vec4(eyePointP, 1.0f));
-    glm::vec3 invRay = glm::vec3(invTransformMatrix * glm::vec4(rayV, 0.0f));
+    glm::vec3 invEyePoint = glm::vec3(inverseTransformMatrix * glm::vec4(eyePointP, 1.0f));
+    glm::vec3 invRay = glm::vec3(inverseTransformMatrix * glm::vec4(rayV, 0.0f));
 
     glm::vec3 p = invEyePoint;
     glm::vec3 d = glm::normalize(invRay);
@@ -141,16 +167,16 @@ double MyGLCanvas::intersect(ObjectNode* obj, glm::vec3 eyePointP, glm::vec3 ray
     // Intersection test based on primitive type
     switch (obj->primitive->getType()) {
         case SHAPE_CUBE:
-            results = intersectWithCube(p, d, glm::mat4(1.0f));  
+            results = intersectWithCube(eyePointP, rayV,inverseTransformMatrix);  
             break;
         case SHAPE_SPHERE:
-            results = intersectWithSphere(p, d, glm::mat4(1.0f)); 
+            results = intersectWithSphere(eyePointP, rayV, inverseTransformMatrix); 
             break;
         case SHAPE_CYLINDER:
-            results = intersectWithCylinder(p, d, glm::mat4(1.0f)); 
+            results = intersectWithCylinder(eyePointP, rayV, inverseTransformMatrix); 
             break;
         case SHAPE_CONE:
-            results = intersectWithCone(p, d, glm::mat4(1.0f)); 
+            results = intersectWithCone(eyePointP, rayV, inverseTransformMatrix); 
             break;
         default:
             break;
@@ -337,16 +363,16 @@ void MyGLCanvas::testObjectIntersection(ObjectNode* node, glm::mat4 parentTransf
     std::vector<double> results;
     switch (node->primitive->getType()) {
         case SHAPE_CUBE:
-            results = intersectWithCube(transformedEye, transformedRay, glm::mat4(1.0f));
+            results = intersectWithCube(eyePoint, rayDir, invTransform);
             break;
         case SHAPE_SPHERE:
-            results = intersectWithSphere(transformedEye, transformedRay, glm::mat4(1.0f));
+            results = intersectWithSphere(eyePoint, rayDir, invTransform);
             break;
         case SHAPE_CYLINDER:
-            results = intersectWithCylinder(transformedEye, transformedRay, glm::mat4(1.0f));
+            results = intersectWithCylinder(eyePoint, rayDir, invTransform);
             break;
         case SHAPE_CONE:
-            results = intersectWithCone(transformedEye, transformedRay, glm::mat4(1.0f));
+            results = intersectWithCone(eyePoint,rayDir, invTransform);
             break;
         default:
             break;
