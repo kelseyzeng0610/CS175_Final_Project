@@ -523,7 +523,7 @@ case FL_RELEASE:
         // We'll rotate around the X-axis, so define the rotation matrix:
         glm::mat4 rotationMatrix(1.0f);
         // Target maximum position values for clamping when 'w' is pressed
-        glm::vec3 maxEyePosition(0.094222f, 3.524521f, 0.094222f);
+        glm::vec3 maxEyePosition(0.165399f, 3.780443f, 0.165399f);
         glm::vec3 minEyePosition(0.164884f, -3.583608f, 0.164884f);
 
         if (key == 'w') { // Move up
@@ -584,9 +584,22 @@ case FL_RELEASE:
     }
 
     case FL_MOUSEWHEEL:
-        printf("Mouse wheel: dx: %d, dy: %d\n", Fl::event_dx(), Fl::event_dy());
-        eyePosition.z += Fl::event_dy() * -0.05f;
-        updateCamera(w(), h());
+        // Get the current camera view angle
+        float currentAngle = camera.getViewAngle();
+
+        // Adjust the angle based on the scroll wheel movement (dy)
+        float angleDelta = Fl::event_dy() * -1.0f; // Negative to match typical scroll behavior
+        float newAngle = currentAngle + angleDelta;
+
+        // Clamp the new angle to a reasonable range, e.g., between 10 and 90 degrees
+        newAngle = glm::clamp(newAngle, 10.0f, 90.0f);
+
+        // Set the new camera view angle
+        camera.setViewAngle(newAngle);
+        printf("Mouse wheel: dy: %d, new camera angle: %f\n", Fl::event_dy(), newAngle);
+
+        // Redraw the canvas to reflect the changes
+        redraw();
         break;
     }
 
