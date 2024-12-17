@@ -52,6 +52,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 
 	isectOnly = 1;
 	segmentsX = segmentsY = 10;
+  fileIndex = 0;
 
 }
 

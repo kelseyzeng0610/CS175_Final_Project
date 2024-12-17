@@ -19,6 +19,9 @@
 #include <FL/Fl_Value_Slider.H>
 
 #include "MyGLCanvas.h"
+#include <fstream>
+#include <sstream>
+#include <string>
 
 using namespace std;
 
@@ -509,6 +512,109 @@ static void addChildCB(Fl_Widget* w, void* userdata) {
     shapeWindow->show();
 }
 
+//helper function to get the corresponding name of that enum index
+std::string getPrimitiveTypeName(int type) {
+    switch (type) {
+        case SHAPE_CUBE:
+            return "cube";
+        case SHAPE_CYLINDER:
+            return "cylinder";
+        case SHAPE_CONE:
+            return "cone";
+        case SHAPE_SPHERE:
+            return "sphere";
+        default:
+            return "unknown";
+    }
+}
+
+static void writeSceneToXML() {
+	printf("creating xml\n");
+	string filename = "scene" + to_string(win->canvas->fileIndex) + ".xml";
+	win->canvas->fileIndex++;
+	ofstream MyFile(filename);
+    std::ostringstream xml;	// Write to the file
+    // Start of the XML file
+    xml << "<scenefile>\n";
+
+    // Write global data
+    xml << "<globaldata>\n"
+        << "<diffusecoeff v=\"0.5\"/>\n"
+        << "<specularcoeff v=\"0.5\"/>\n"
+        << "<ambientcoeff v=\"0.5\"/>\n"
+        << "</globaldata>\n";
+    
+    // Add light data
+    xml << "<lightdata>\n";
+    xml << "<id v=\"0\"/>\n";
+    xml << "<color r=\"" << 0.5
+        << "\" g=\"" << 0.5
+        << "\" b=\"" << 0.5 << "\"/>\n";
+    xml << "<position x=\"" << win->canvas->eyePosition.x 
+        << "\" y=\"" << win->canvas->eyePosition.x 
+        << "\" z=\"" << win->canvas->eyePosition.x << "\"/>\n";
+    xml << "    </lightdata>\n";
+
+    // Write camera data
+    glm::vec3 eyePos = win->canvas->camera.getEyePoint();
+    glm::vec3 upVec = win->canvas->camera.getUpVector();
+    float viewAngle = win->canvas->camera.getViewAngle();
+
+    xml << "<cameradata>\n"
+        << "<pos x=\"" << eyePos.x << "\" y=\"" << eyePos.y << "\" z=\"" << eyePos.z << "\"/>\n"
+        << "<up x=\"" << upVec.x << "\" y=\"" << upVec.y << "\" z=\"" << upVec.z << "\"/>\n"
+        << "<heightangle v=\"" << viewAngle << "\"/>\n"
+        << "</cameradata>\n";
+
+    // Start the root object
+    xml << "<object type=\"tree\" name=\"root\">\n";
+
+    // Loop through the object list
+    for (const auto& obj : win->canvas->objectList) {
+        xml << "<transblock>\n";
+        
+        // Write scale transformation
+        xml << "<scale x=\"" << obj.scale.x
+            << "\" y=\"" << obj.scale.y
+            << "\" z=\"" << obj.scale.z << "\"/>\n";
+        
+        // Write translation transformation
+        xml << "<translate x=\"" << obj.translate.x
+            << "\" y=\"" << obj.translate.y
+            << "\" z=\"" << obj.translate.z << "\"/>\n";
+
+        // Write the primitive object
+        xml << "<object type=\"primitive\" name=\"" << getPrimitiveTypeName(obj.primitive->getType()) << "\">\n";
+
+        // Write color information (assuming diffuse color for simplicity)
+        xml << "<diffuse r=\"" << obj.red / 255.0f
+            << "\" g=\"" << obj.green / 255.0f
+            << "\" b=\"" << obj.blue / 255.0f << "\"/>\n";
+
+        xml << "</object>\n";
+
+        xml << "</transblock>\n";
+    }
+
+    // End the root object
+    xml << "</object>\n";
+
+    // End of the XML file
+    xml << "</scenefile>\n";
+
+    // Write to file
+    std::ofstream outFile(filename);
+    if (outFile.is_open()) {
+        outFile << xml.str();
+        outFile.close();
+        std::cout << "Scene written to " << filename << std::endl;
+    } else {
+        std::cerr << "Error: Could not open file " << filename << " for writing.\n";
+    }
+
+}
+
+
 static void addShapeCB(Fl_Widget* w, void* userdata){
     MyAppWindow* window = (MyAppWindow*)userdata;
     Fl_Window* shapeWindow = new Fl_Window(300, 200, "Select Shape");
@@ -560,18 +666,6 @@ static void addShapeCB(Fl_Widget* w, void* userdata){
     shapeWindow->set_modal(); // Make it a modal dialog
     shapeWindow->show();
 }
-
-
-
-// static void addShape() {
-// 	//TODO: load the shape
-// }
-
-static void createXML() {
-	//TODO: export to xml
-
-}
-
 
 MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	begin();
@@ -700,7 +794,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
    
 
 	drawButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Create XML");
-	drawButton->callback((Fl_Callback*)createXML);
+	drawButton->callback((Fl_Callback*)writeSceneToXML);
     radioPack->end();
 
 	pack->end();

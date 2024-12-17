@@ -78,6 +78,7 @@ public:
 	int segmentsX, segmentsY;
 	int selectedObjId;
 	int nextObjectId;
+	int fileIndex;
 
 	// used in flattened list to make update values
 	std::vector<ObjectNode> objectList;
