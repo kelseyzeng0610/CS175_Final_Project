@@ -260,7 +260,16 @@ void MyGLCanvas::drawNode(ObjectNode* node, glm::mat4 parentTransform) {
     float red = node->red / 255.0f;
     float green = node->green / 255.0f;
     float blue = node->blue / 255.0f;
-    glColor3f(red, green, blue);
+    if (wireframe) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glColor3f(1.0f, 1.0f, 1.0f);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        // printf("red: %f\n", red);
+        // printf("green: %f\n", green);
+        // printf("blue: %f\n", blue);
+        glColor3f(red, green, blue);
+    }
 
     // Draw the primitive if it exists
     if (node->primitive) {

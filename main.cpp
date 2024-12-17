@@ -435,9 +435,9 @@ static void writeSceneToXML() {
         << "\" g=\"" << 0.5
         << "\" b=\"" << 0.5 << "\"/>\n";
     xml << "<position x=\"" << win->canvas->eyePosition.x 
-        << "\" y=\"" << win->canvas->eyePosition.y 
+        << "\" y=\"" << win->canvas->eyePosition.y
         << "\" z=\"" << win->canvas->eyePosition.z << "\"/>\n";
-    xml << "</lightdata>\n";
+    xml << "    </lightdata>\n";
 
     // Write camera data
     glm::vec3 eyePos = win->canvas->camera.getEyePoint();
