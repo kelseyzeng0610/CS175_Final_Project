@@ -18,8 +18,6 @@
 #include "Cone.h"
 #include "Cube.h"
 #include "Cylinder.h"
-// #include "scene/SceneParser.h"
-// #include "gfxDefs.h"
 
 
 #define SPLINE_SIZE 100
