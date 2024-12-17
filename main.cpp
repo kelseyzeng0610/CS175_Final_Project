@@ -696,7 +696,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
     loadPack->end();
 
 	// render options
-    Fl_Pack *buttonsPack = new Fl_Pack(w() - 100, 30, 100, h(), "Render");
+    Fl_Pack *buttonsPack = new Fl_Pack(w() - 100, 30, 100, h(), "Draw Objects");
     buttonsPack->box(FL_DOWN_FRAME);
     buttonsPack->labelfont(1);
     buttonsPack->type(Fl_Pack::VERTICAL);
@@ -707,32 +707,32 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	wireButton->callback(toggleCB, (void*)(&(canvas->wireframe)));
 	wireButton->value(canvas->wireframe);
 
-    smoothButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Smooth");
-    smoothButton->value(canvas->smooth);
-    smoothButton->callback(toggleCB, (void *)(&(canvas->smooth)));
+    // smoothButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Smooth");
+    // smoothButton->value(canvas->smooth);
+    // smoothButton->callback(toggleCB, (void *)(&(canvas->smooth)));
 
-    fillButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Fill");
-    fillButton->value(canvas->fill);
-    fillButton->callback(toggleCB, (void *)(&(canvas->fill)));
+    // fillButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Fill");
+    // fillButton->value(canvas->fill);
+    // fillButton->callback(toggleCB, (void *)(&(canvas->fill)));
 
-    normalButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Show Normal");
-    normalButton->value(canvas->normal);
-    normalButton->callback(toggleCB, (void *)(&(canvas->normal)));
+    // normalButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "Show Normal");
+    // normalButton->value(canvas->normal);
+    // normalButton->callback(toggleCB, (void *)(&(canvas->normal)));
 
-		renderButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Render!");
-		renderButton->callback(renderCB, (void*)this);
+	// 	renderButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Render!");
+	// 	renderButton->callback(renderCB, (void*)this);
 		
-		isectButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "isectOnly");
-		isectButton->value(canvas->isectOnly);
-		isectButton->callback(toggleCB, (void*)(&(canvas->isectOnly)));
+	// 	isectButton = new Fl_Check_Button(0, 0, pack->w() - 20, 20, "isectOnly");
+	// 	isectButton->value(canvas->isectOnly);
+	// 	isectButton->callback(toggleCB, (void*)(&(canvas->isectOnly)));
 
-		maxRecursionDepthSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
-		maxRecursionDepthSlider->align(FL_ALIGN_TOP);
-		maxRecursionDepthSlider->type(FL_HOR_SLIDER);
-		maxRecursionDepthSlider->step(1);
-		maxRecursionDepthSlider->bounds(0, 5);
-		maxRecursionDepthSlider->value(canvas->maxRecursionDepth);
-		maxRecursionDepthSlider->callback(maxRecursionDepthSliderCB);
+		// maxRecursionDepthSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
+		// maxRecursionDepthSlider->align(FL_ALIGN_TOP);
+		// maxRecursionDepthSlider->type(FL_HOR_SLIDER);
+		// maxRecursionDepthSlider->step(1);
+		// maxRecursionDepthSlider->bounds(0, 5);
+		// maxRecursionDepthSlider->value(canvas->maxRecursionDepth);
+		// maxRecursionDepthSlider->callback(maxRecursionDepthSliderCB);
 
     buttonsPack->end();
 
