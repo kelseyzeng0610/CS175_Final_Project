@@ -12,7 +12,7 @@ Welcome to Scene Builder 1.0, a powerful tool for creating and managing 3D scene
 
 ## Getting Started
 
-
+![alt text](https://github.com/kelseyzeng0610/SceneBuilder1.0/blob/main/example.png)
 
 ### Prerequisites
 
